@@ -1,17 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import update from 'immutability-helper';
 
 let boardSize = 20;
 
 function Square(props) {
     return (
         <button
-            className="square"
+            className={"square player" + props.playernumber}
             onClick={props.onClick}
         >
-            {/* {props.column}
-            {props.row} */}
         </button>
     );
 }
@@ -21,9 +20,8 @@ function Row(props) {
     for (let j = 0; j < props.squares.length; j++) {
         squares.push(<Square 
             key ={j} 
-            columnIndex = {j} 
-            row = {props.rowIndex} 
-            onClick={props.onClick}
+            onClick={() => props.onClick(j, props.rowIndex)}
+            playernumber = {props.squares[j]}
         />)
     }
     return (
@@ -42,7 +40,7 @@ class Board extends React.Component {
                 key ={i} 
                 rowIndex = {i} 
                 squares = {this.props.rows[i].squares}
-                onClick = {this.props.onClick(i,i)}/>)
+                onClick = {this.props.onClick}/>)
         }
         return (
             <div>
@@ -90,9 +88,12 @@ class Game extends React.Component {
     drawPiece(piece) {
         const history = this.state.history.slice(0,this.state.stepNumber + 1);
         const current = history[this.state.stepNumber];
+        const rows = current.rows.slice();
 
         piece.cells.forEach(cell => {
-            current.rows[piece.centerY].squares[piece.centerX] = piece.playerNumber;
+            const row = rows[piece.centerY];
+            const squares = row.squares.slice();
+            squares[piece.centerX] = piece.playerNumber;
         });
         
         this.setState({
@@ -138,13 +139,16 @@ class Game extends React.Component {
             </div>
         );
     }
-    handleClick(centerY, centerX) {
-        const history = this.state.history.slice(0,this.state.stepNumber + 1);
-        const current = history[this.state.stepNumber];
+    handleClick(centerX, centerY) {
+        debugger;
+        // const history = this.state.history.slice(0,this.state.stepNumber + 1);
+        // const current = history[this.state.stepNumber];
         // const squares = current.rows.slice();
     
-        const piece = this.state.pieces.splice(0,1);
-        debugger;
+        let piece = this.state.pieces.splice(0,1);
+        piece[0].centerX = centerX;
+        piece[0].centerY = centerY;
+
         this.drawPiece(piece[0]);
 
 
