@@ -88,16 +88,18 @@ class Game extends React.Component {
     drawPiece(piece) {
         const history = this.state.history.slice(0,this.state.stepNumber + 1);
         const current = history[this.state.stepNumber];
-        const rows = current.rows.slice();
+        let newCurrent = []
 
         piece.cells.forEach(cell => {
-            const row = rows[piece.centerY];
-            const squares = row.squares.slice();
-            squares[piece.centerX] = piece.playerNumber;
+            const xCoord = piece.centerX + cell[0];
+            const yCoord = piece.centerY + cell[1];
+            newCurrent = update(current, {
+                rows: {[yCoord]:{squares:{[xCoord]:{$set: piece.playerNumber}}}}
+            });
         });
         
         this.setState({
-            history: history.concat([current]),
+            history: history.concat([newCurrent]),
             stepNumber: history.length,
         })
     }
