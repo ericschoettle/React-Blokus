@@ -39,6 +39,10 @@ body {
   .player0 {
     background: blue;
   }
+
+  .active {
+    border: red;
+  }
   
   .kbd-navigation .square:focus {
     background: #ddd;

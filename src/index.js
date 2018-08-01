@@ -8,7 +8,7 @@ let boardSize = 20;
 function Square(props) {
     return (
         <button
-            className={`square player${props.playernumber || ''}`}
+            className={`square ${props.squareInfo.playerNumber !== null ? 'player' + props.squareInfo.playerNumber: ''} ${props.squareInfo.active ? 'active' : ''}`}
             onClick={props.onClick}
         >
         </button>
@@ -17,13 +17,12 @@ function Square(props) {
 
 class Row extends React.Component {
     render () {
-        // debugger; // And here this.props.squares isn't updating with what was passed in from Board
         const squares = [];
         for (let j = 0; j < this.props.squares.length; j++) {
             squares.push(<Square 
                 key ={j} 
                 onClick={() => this.props.onClick(j, this.props.rowIndex)}
-                playernumber = {this.props.squares[j]} // Naming here is temporary - passing the value in player number, rather than the whole object, to make testing easier
+                squareInfo = {this.props.squares[j]} // Naming here is temporary - passing the value in player number, rather than the whole object, to make testing easier
             />)
         }
         return (
@@ -37,17 +36,17 @@ class Row extends React.Component {
 
 class Board extends React.Component {
     render() {
+
         let rows = [];
         for (let i = 0; i < this.props.rows.length; i++) {
             rows.push(<Row 
                 key ={i} 
                 rowIndex = {i} 
                 squares = {this.props.rows[i].squares.map(square => {
-                    return {playerNumber: square.playerNumber};
+                    return {playerNumber: square.playerNumber, active: square.active};
                 })}
                 onClick = {this.props.onClick}/>)
         } 
-        // debugger // here rows has the updated value for squares
         return (
             <div>
                 {rows}
@@ -74,7 +73,7 @@ class Game extends React.Component {
         super(props);
         this.state = {
             history: [{
-                rows: Array(boardSize).fill({squares: Array(boardSize).fill({playerNumber: null, pieceIndex: null })}),
+                rows: Array(boardSize).fill({squares:Array(boardSize).fill({playerNumber: null, active: null })}),
                 // players: play
             }],
             pieces: makePieces({
@@ -88,6 +87,7 @@ class Game extends React.Component {
 
     // takes a piece and draws it on the board, in terms of rows/columns
     drawPieces(pieces) {
+
         const history = this.state.history.slice(0,this.state.stepNumber + 1);
         let current = history[this.state.stepNumber];
         pieces.forEach(piece => {
@@ -95,11 +95,10 @@ class Game extends React.Component {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
                 current = update(current, {
-                    rows: {[yCoord]:{squares:{[xCoord]:{$set: {playerNumber: piece.playerNumber, pieceIndex: piece.pieceIndex}}}}}
+                    rows: {[yCoord]:{squares:{[xCoord]:{$set: {playerNumber: piece.playerNumber, active: piece.active}}}}}
                 });
             });
         })
-        
         this.setState({
             history: history.concat([current]),
             stepNumber: history.length,
@@ -112,6 +111,7 @@ class Game extends React.Component {
     }
 
     render() {
+
         const history = this.state.history;
         const current = history[this.state.stepNumber];
         const winner = calculateWinner(current.rows);
@@ -153,7 +153,10 @@ class Game extends React.Component {
         // const history = this.state.history.slice(0,this.state.stepNumber + 1);
         // const current = history[this.state.stepNumber];
         // const squares = current.rows.slice();
-    
+        debugger;
+        // if (!this.state.rows[centerY].squares[centerX].pieceIndex.isNull()) {
+            
+        // }
         let piece = this.state.pieces.splice(0,1);
         piece[0].centerX = centerX;
         piece[0].centerY = centerY;
