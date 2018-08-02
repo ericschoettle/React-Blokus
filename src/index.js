@@ -73,66 +73,65 @@ class Game extends React.Component {
         super(props);
         this.state = {
             history: [{
-                rows: Array(boardSize).fill({squares:Array(boardSize).fill({playerNumber: null, active: null })}),
+                rows: Array(boardSize).fill({squares:Array(boardSize).fill({playerNumber: null, active: null, pieceIndex: null })}),
                 // players: play
             }],
             pieces: makePieces({
                 playerNumber: 0, 
                 boardNumber: 0,
             }),
+            activePieceIndex: null,
             stepNumber: 0,
             xIsNext: true,
         }
     }
 
     // takes a piece and draws it on the board, in terms of rows/columns
-    drawPieces(pieces) {
-
-        const history = this.state.history.slice(0,this.state.stepNumber + 1);
-        let current = history[this.state.stepNumber];
-        pieces.forEach(piece => {
+    drawPieces(pieces, current, erase = false) {
+        pieces.forEach((piece, pieceIndex) => {
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
                 current = update(current, {
-                    rows: {[yCoord]:{squares:{[xCoord]:{$set: {playerNumber: piece.playerNumber, active: piece.active}}}}}
+                    rows: {[yCoord]:{squares:{[xCoord]:{$set: {
+                        playerNumber: erase? null : piece.playerNumber, 
+                        active: erase? null : piece.active, 
+                        pieceIndex: erase? null : pieceIndex
+                    }}}}}
                 });
             });
         })
+        return current;
+    }
+
+    componentDidMount() {
+        // initialize board
+        const history = this.state.history;
+        const current = history[this.state.stepNumber];
+        const pieces = this.state.pieces;
+        const newBoard = this.drawPieces(pieces,current)
         this.setState({
-            history: history.concat([current]),
+            history: history.concat([newBoard]),
             stepNumber: history.length,
         })
     }
-    componentDidMount() {
-        // initialize board
-        const pieces = this.state.pieces;
-        this.drawPieces(pieces)
-    }
 
     render() {
-
         const history = this.state.history;
-        const current = history[this.state.stepNumber];
-        const winner = calculateWinner(current.rows);
+        const current = history[history.length - 1];
 
-        const moves = history.map((step, move) => {
-            const description = move ? `Go to move #${move}` : 'Go to game start';
-            return (
-                <li key= {move}>
-                    <button onClick = {() => this.jumpTo(move)}>
-                        {description}
-                    </button>
-                </li>
-            );
+        const controls = ['rotClock', 'rotCounterClock', 'flipV', 'flipH', 'moveLeft', 'moveRight', 'moveUp', 'moveDown'];
+        const controlsJSX = controls.map(control => {
+            if (this.state.activePieceIndex !== null) {
+                return (
+                    <li key= {control}>
+                        <button onClick = {() => this.movePiece(control)}>
+                            {control}
+                        </button>
+                    </li>
+                );
+            }
         });
-
-        let status;
-        if (winner) {
-            status = `Winner: ${winner}`
-        } else {
-            status = `Next player: ${(this.state.xIsNext ? 'X' : 'O')}`;
-        }
 
         return (
             <div className="game">
@@ -142,48 +141,153 @@ class Game extends React.Component {
                         onClick={(x,y) => this.handleClick(x,y)}
                     />
                 </div>
-                <div className="game-info">
-                    <div>{status}</div>
-                    <ol>{moves}</ol>
+                <div className="game-controls">
+                    <ul>{controlsJSX}</ul> 
                 </div>
-            </div>
+            </div>  
         );
     }
-    handleClick(centerX, centerY) {
-        // const history = this.state.history.slice(0,this.state.stepNumber + 1);
-        // const current = history[this.state.stepNumber];
-        // const squares = current.rows.slice();
-        debugger;
-        // if (!this.state.rows[centerY].squares[centerX].pieceIndex.isNull()) {
-            
-        // }
-        let piece = this.state.pieces.splice(0,1);
-        piece[0].centerX = centerX;
-        piece[0].centerY = centerY;
+    movePiece(control) {
+        const history = this.state.history;
+        const current = history[this.state.stepNumber];
 
-        this.drawPieces([piece[0]]);
+        const piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
+        const erasedBoard = this.drawPieces(piece, current, true); 
+        // perform transformation       
+        this[control](piece[0])
+        const drawnBoard = this.drawPieces(piece, erasedBoard);
 
-
-
-        // if (calculateWinner(squares) || squares[i]) {
-        //     return;
-        // }
-        // squares[i] = this.state.xIsNext ? 'X' : 'O';
-
-        // this.setState({
-        //     history: history.concat([{
-        //         squares: squares,
-        //     }]),
-        //     stepNumber: history.length,
-        //     xIsNext: !this.state.xIsNext,
-        // })
-    }
-
-    jumpTo(step) {
         this.setState({
-            stepNumber: step,
-            xIsNext: (step % 2) === 0,
-        });
+            history: history.concat([drawnBoard]),
+            stepNumber: history.length,
+        })
+        // set state with new pieces, 
+    }
+    // function will test if location is valid.
+    validLocation(piece) {
+        return true
+    }
+    testCellOffBoard(piece) {
+        return function(cell, index, array) {
+            return (piece.centerX + cell[0] < 0 || piece.centerY + cell[1] < 0 || piece.centerX + cell[0] >= boardSize || piece.centerY + cell[1] >= boardSize)
+        }
+    }
+    testPieceOffBoard(piece) {
+        debugger;
+        if (piece.cells.some(this.testCellOffBoard(piece))) {
+          return true
+        } else {
+            // alert - piece off board
+        }
+      }
+
+      moveLeft(piece) {
+        piece.centerX -= 1
+        if (this.testPieceOffBoard(piece)) {
+          this.moveRight(piece)
+        }
+        return piece
+      }
+    
+      moveRight(piece) {
+        piece.centerX += 1
+        if (this.testPieceOffBoard(piece)) {
+          this.moveLeft(piece)
+        }
+        return piece
+      }
+    
+      moveUp(piece) {
+        piece.centerY -= 1
+        if (this.testPieceOffBoard(piece)) {
+          this.moveDown(piece)
+        }
+        return piece
+      }
+    
+      moveDown(piece) {
+        piece.centerY += 1
+        if (this.testPieceOffBoard(piece)) {
+          this.moveUp(piece)
+        }
+        return piece
+      }
+    
+      flipH(piece) {
+        piece.cells.forEach((cell) => {
+          cell[0] = -cell[0]
+        })
+        if (this.testPieceOffBoard(piece)) {
+          this.flipH(piece)
+        }
+        return piece
+      }
+    
+      flipV(piece) {
+        piece.cells.forEach((cell) => {
+          cell[1] = -cell[1]
+        })
+        if (this.testPieceOffBoard(piece)) {
+          this.flipV(piece)
+        }
+        return piece
+      }
+    
+      rotCounterClock(piece) {
+        piece.cells.forEach((cell) => {
+          var tempX = cell[0]
+          cell[0] = cell[1]
+          cell[1] = -tempX
+        })
+        if (this.testPieceOffBoard(piece)) {
+          this.rotClock(piece)
+        }
+        return piece
+      }
+      
+      rotClock(piece) {
+        piece.cells.forEach((cell) => {
+          var tempX = cell[0]
+          cell[0] = -cell[1]
+          cell[1] = tempX
+        })
+        if (this.testPieceOffBoard(piece)) {
+          this.rotCounterClock(piece)
+        }
+        return piece
+      }
+
+
+    handleClick(centerX, centerY) {
+        const history = this.state.history.slice(0,this.state.stepNumber + 1);
+        const current = history[this.state.stepNumber];
+        // const squares = current.rows.slice();
+        const pieceIndex = current.rows[centerY].squares[centerX].pieceIndex;
+        const oldPieces = this.state.pieces.slice();
+
+        let newPieces = [];
+        let newBoard = [];
+        let activePieceIndex = this.state.activePieceIndex;
+        // 'pick up' piece
+        if (pieceIndex !== null && activePieceIndex === null) {
+            newPieces = update(oldPieces, {[pieceIndex]:{$merge:{
+                active: true
+            }}})
+            activePieceIndex = pieceIndex;
+        
+            newBoard = this.drawPieces([newPieces[pieceIndex]], current)
+        // put piece down
+        } else if (activePieceIndex !== null && this.validLocation(newPieces[pieceIndex])) {
+            activePieceIndex = null;
+        }
+        
+
+        this.setState({
+            pieces: newPieces,
+            activePieceIndex: activePieceIndex,
+            history: history.concat([newBoard]),
+            stepNumber: history.length,
+        })
     }
 }
 
@@ -196,25 +300,6 @@ ReactDOM.render(
     document.getElementById('root')
 );
 
-function calculateWinner(squares) {
-    // const lines = [
-    //     [0, 1, 2],
-    //     [3, 4, 5],
-    //     [6, 7, 8],
-    //     [0, 3, 6],
-    //     [1, 4, 7],
-    //     [2, 5, 8],
-    //     [0, 4, 8],
-    //     [2, 4, 6],
-    // ];
-    // for (let i = 0; i < lines.length; i++) {
-    //     const [a, b, c] = lines[i];
-    //     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-    //         return squares[a];
-    //     }
-    // }
-    return null;
-}
 
 function makePieces(props) {
     return [

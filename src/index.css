@@ -41,7 +41,8 @@ body {
   }
 
   .active {
-    border: red;
+    opacity: 0.25;
+    border: 2px solid red;
   }
   
   .kbd-navigation .square:focus {
