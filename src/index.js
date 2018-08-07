@@ -72,27 +72,23 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            history: [{
-                rows: Array(boardSize).fill({squares:Array(boardSize).fill({playerNumber: null, active: null, pieceIndex: null })}),
-                // players: play
-            }],
+            rows: Array(boardSize).fill({squares:Array(boardSize).fill({playerNumber: null, active: null, pieceIndex: null })}),
             pieces: makePieces({
                 playerNumber: 0, 
                 boardNumber: 0,
             }),
             activePieceIndex: null,
-            stepNumber: 0,
             xIsNext: true,
         }
     }
 
     // takes a piece and draws it on the board, in terms of rows/columns
-    drawPieces(pieces, current, erase = false) {
+    drawPieces(pieces, rows, erase = false) {
         pieces.forEach((piece, pieceIndex) => {
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
-                current = update(current, {
+                rows = update(rows, {
                     rows: {[yCoord]:{squares:{[xCoord]:{$set: {
                         playerNumber: erase? null : piece.playerNumber, 
                         active: erase? null : piece.active, 
@@ -101,25 +97,22 @@ class Game extends React.Component {
                 });
             });
         })
-        return current;
+        debugger;
+        return rows;
     }
 
     componentDidMount() {
         // initialize board
-        const history = this.state.history;
-        const current = history[this.state.stepNumber];
+        const rows = this.state.rows
         const pieces = this.state.pieces;
-        const newBoard = this.drawPieces(pieces,current)
+        const newRows = this.drawPieces(pieces,rows)
         this.setState({
-            history: history.concat([newBoard]),
-            stepNumber: history.length,
+            rows: newRows,
         })
     }
 
     render() {
-        const history = this.state.history;
-        const current = history[history.length - 1];
-
+        const rows = this.state.rows;
         const controls = ['rotClock', 'rotCounterClock', 'flipV', 'flipH', 'moveLeft', 'moveRight', 'moveUp', 'moveDown'];
         const controlsJSX = controls.map(control => {
             if (this.state.activePieceIndex !== null) {
@@ -137,7 +130,7 @@ class Game extends React.Component {
             <div className="game">
                 <div className="game-board">
                     <Board
-                        rows={current.rows}
+                        rows={rows}
                         onClick={(x,y) => this.handleClick(x,y)}
                     />
                 </div>
@@ -148,18 +141,16 @@ class Game extends React.Component {
         );
     }
     movePiece(control) {
-        const history = this.state.history;
-        const current = history[this.state.stepNumber];
+        const rows = this.state.rows;
 
         const piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
-        const erasedBoard = this.drawPieces(piece, current, true); 
+        const erasedrows = this.drawPieces(piece, rows, true); 
         // perform transformation       
         this[control](piece[0])
-        const drawnBoard = this.drawPieces(piece, erasedBoard);
+        const drawnRows = this.drawPieces(piece, erasedrows);
 
         this.setState({
-            history: history.concat([drawnBoard]),
-            stepNumber: history.length,
+            rows: drawnRows,
         })
         // set state with new pieces, 
     }
@@ -173,7 +164,6 @@ class Game extends React.Component {
         }
     }
     testPieceOffBoard(piece) {
-        debugger;
         if (piece.cells.some(this.testCellOffBoard(piece))) {
           return true
         } else {
@@ -259,14 +249,13 @@ class Game extends React.Component {
 
 
     handleClick(centerX, centerY) {
-        const history = this.state.history.slice(0,this.state.stepNumber + 1);
-        const current = history[this.state.stepNumber];
-        // const squares = current.rows.slice();
-        const pieceIndex = current.rows[centerY].squares[centerX].pieceIndex;
+        const rows = this.state.rows;
+        // const squares = rows.slice();
+        const pieceIndex = rows[centerY].squares[centerX].pieceIndex;
         const oldPieces = this.state.pieces.slice();
 
         let newPieces = [];
-        let newBoard = [];
+        let newRows = [];
         let activePieceIndex = this.state.activePieceIndex;
         // 'pick up' piece
         if (pieceIndex !== null && activePieceIndex === null) {
@@ -275,7 +264,7 @@ class Game extends React.Component {
             }}})
             activePieceIndex = pieceIndex;
         
-            newBoard = this.drawPieces([newPieces[pieceIndex]], current)
+            newRows = this.drawPieces([newPieces[pieceIndex]], rows)
         // put piece down
         } else if (activePieceIndex !== null && this.validLocation(newPieces[pieceIndex])) {
             activePieceIndex = null;
@@ -285,8 +274,7 @@ class Game extends React.Component {
         this.setState({
             pieces: newPieces,
             activePieceIndex: activePieceIndex,
-            history: history.concat([newBoard]),
-            stepNumber: history.length,
+            rows: newRows
         })
     }
 }
