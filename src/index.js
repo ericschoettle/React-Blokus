@@ -6,9 +6,10 @@ import update from 'immutability-helper';
 let boardSize = 20;
 
 function Square(props) {
-    return (
+    const inactivePieceString = props.squareInfo.inactivePiecePlayerNumber == null ? '' : 'setPlayer' + props.squareInfo.inactivePiecePlayerNumber;
+    const activePieceString = props.squareInfo.activePiecePlayerNumber == null ? '' : 'activePlayer' + props.squareInfo.activePiecePlayerNumber;    return (
         <button
-            className={`square ${props.squareInfo.playerNumber !== null ? 'player' + props.squareInfo.playerNumber: ''} ${props.squareInfo.active ? 'active' : ''}`}
+            className={`square ${inactivePieceString + ' ' + activePieceString}`}
             onClick={props.onClick}
         >
         </button>
@@ -43,7 +44,7 @@ class Board extends React.Component {
                 key ={i} 
                 rowIndex = {i} 
                 squares = {this.props.rows[i].squares.map(square => {
-                    return {playerNumber: square.playerNumber, active: square.active};
+                    return {inactivePiecePlayerNumber: square.inactivePiecePlayerNumber, activePiecePlayerNumber: square.activePiecePlayerNumber};
                 })}
                 onClick = {this.props.onClick}/>)
         } 
@@ -72,7 +73,12 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            rows: Array(boardSize).fill({squares:Array(boardSize).fill({playerNumber: null, active: null, pieceIndex: null })}),
+            rows: Array(boardSize).fill({squares:Array(boardSize).fill({
+                inactivePiecePlayerNumber: null, 
+                activePiecePlayerNumber: null, 
+                inactivePieceIndex: null,
+                activePieceIndex: null,
+            })}),
             pieces: makePieces({
                 playerNumber: 0, 
                 boardNumber: 0,
@@ -83,21 +89,37 @@ class Game extends React.Component {
     }
 
     // takes a piece and draws it on the board, in terms of rows/columns
-    drawPieces(pieces, rows, erase = false) {
+    piecesToCells(pieces, rows, action) {
         pieces.forEach((piece, pieceIndex) => {
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
-                rows = update(rows, {
-                    rows: {[yCoord]:{squares:{[xCoord]:{$set: {
-                        playerNumber: erase? null : piece.playerNumber, 
-                        active: erase? null : piece.active, 
-                        pieceIndex: erase? null : pieceIndex
-                    }}}}}
-                });
+                if (action === 'drawInactive') {
+                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
+                        inactivePiecePlayerNumber: piece.playerNumber,  
+                        inactivePieceIndex: pieceIndex,
+                    }}}}});
+                } else if (action === 'eraseInactive') {
+                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
+                        inactivePiecePlayerNumber: null,  
+                        inactivePieceIndex: null,
+                    }}}}});
+                } else if (action === 'drawActive') { // draw temp piece
+                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
+                        activePiecePlayerNumber: piece.playerNumber,  
+                        activePieceIndex: pieceIndex,
+                    }}}}});
+                } else if (action === 'eraseActive') {
+                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
+                        activePiecePlayerNumber: null,  
+                        activePieceIndex: null,
+                    }}}}});
+                } else {
+                    debugger;
+                    console.log(`Error in pieceToCells - invalid action '${action}'`)
+                }
             });
-        })
-        debugger;
+        });
         return rows;
     }
 
@@ -105,7 +127,7 @@ class Game extends React.Component {
         // initialize board
         const rows = this.state.rows
         const pieces = this.state.pieces;
-        const newRows = this.drawPieces(pieces,rows)
+        const newRows = this.piecesToCells(pieces,rows, 'drawInactive');
         this.setState({
             rows: newRows,
         })
@@ -144,10 +166,10 @@ class Game extends React.Component {
         const rows = this.state.rows;
 
         const piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
-        const erasedrows = this.drawPieces(piece, rows, true); 
+        const erasedrows = this.piecesToCells(piece, rows, 'eraseActive'); 
         // perform transformation       
         this[control](piece[0])
-        const drawnRows = this.drawPieces(piece, erasedrows);
+        const drawnRows = this.piecesToCells(piece, erasedrows, 'drawActive');
 
         this.setState({
             rows: drawnRows,
@@ -251,25 +273,30 @@ class Game extends React.Component {
     handleClick(centerX, centerY) {
         const rows = this.state.rows;
         // const squares = rows.slice();
-        const pieceIndex = rows[centerY].squares[centerX].pieceIndex;
-        const oldPieces = this.state.pieces.slice();
+        const pieceIndex = rows[centerY].squares[centerX].inactivePieceIndex;
+        const pieces = this.state.pieces.slice();
 
         let newPieces = [];
         let newRows = [];
         let activePieceIndex = this.state.activePieceIndex;
+
         // 'pick up' piece
         if (pieceIndex !== null && activePieceIndex === null) {
-            newPieces = update(oldPieces, {[pieceIndex]:{$merge:{
+            newPieces = update(pieces, {[pieceIndex]:{$merge:{
                 active: true
-            }}})
+            }}});
+            
+            const erasedRows = this.piecesToCells([newPieces[pieceIndex]], rows, 'eraseInactive');
+            newRows = this.piecesToCells([newPieces[pieceIndex]], erasedRows, 'drawActive');
             activePieceIndex = pieceIndex;
-        
-            newRows = this.drawPieces([newPieces[pieceIndex]], rows)
+
         // put piece down
         } else if (activePieceIndex !== null && this.validLocation(newPieces[pieceIndex])) {
-            activePieceIndex = null;
+            debugger;
+            const erasedRows = this.piecesToCells([pieces[activePieceIndex]], rows, 'eraseActive');
+            newRows = this.piecesToCells([pieces[activePieceIndex]], erasedRows, 'drawInactive');
+            activePieceIndex = null;   
         }
-        
 
         this.setState({
             pieces: newPieces,

@@ -36,13 +36,12 @@ body {
     outline: none;
   }
 
-  .player0 {
+  .setPlayer0 {
     background: blue;
   }
 
-  .active {
-    opacity: 0.25;
-    border: 2px solid red;
+  .activePlayer0 {
+    border: 2px solid blue;
   }
   
   .kbd-navigation .square:focus {
