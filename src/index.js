@@ -178,7 +178,32 @@ class Game extends React.Component {
     }
     // function will test if location is valid.
     validLocation(piece) {
-        return true
+        debugger;
+        const rows = this.state.rows;
+        let cornerTouch = false;
+        piece.cells.forEach(cell => {
+            const x = piece.centerX + cell[0];
+            const y = piece.centerY + cell[1];
+            // test non-overlap
+            if (rows[y].squares[x].inactivePiecePlayerNumber !== null) {
+                return false;
+            // test sides touch same player's pieces
+            } else if ( (rows[y + 1] && rows[y + 1].squares[x] && rows[y + 1].squares[x].inactivePiecePlayerNumber === piece.playerNumber) 
+                || (rows[y - 1] && rows[y - 1].squares[x] && rows[y - 1].squares[x].inactivePiecePlayerNumber === piece.playerNumber)
+                || (rows[y].squares[x + 1] && rows[y].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber)
+                || (rows[y].squares[x - 1] && rows[y].squares[x - 1].inactivePiecePlayerNumber === piece.playerNumber)
+            ){
+                return false;
+            // test if one corner touches
+            } else if ((rows[y + 1] && rows[y + 1].squares[x + 1] && rows[y + 1].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber) 
+                || (rows[y + 1] && rows[y + 1].squares[x - 1] && rows[y + 1].squares[x - 1].inactivePiecePlayerNumber === piece.playerNumber)
+                || (rows[y - 1] && rows[y - 1].squares[x + 1] && rows[y - 1].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber)
+                || (rows[y - 1] && rows[y - 1].squares[x -1] && rows[y - 1].squares[x -1].inactivePiecePlayerNumber === piece.playerNumber)
+            ){
+                cornerTouch = true;
+            }
+        }); 
+        return cornerTouch;
     }
     testCellOffBoard(piece) {
         return function(cell, index, array) {
@@ -291,13 +316,13 @@ class Game extends React.Component {
             activePieceIndex = pieceIndex;
 
         // put piece down
-        } else if (activePieceIndex !== null && this.validLocation(newPieces[pieceIndex])) {
+        } else if (activePieceIndex !== null && this.validLocation(pieces[activePieceIndex])) {
             newPieces = pieces;
             const erasedRows = this.piecesToCells([pieces[activePieceIndex]], rows, 'eraseActive');
             newRows = this.piecesToCells([pieces[activePieceIndex]], erasedRows, 'drawInactive');
             activePieceIndex = null;   
         }
-        debugger;
+
         this.setState({
             pieces: newPieces,
             activePieceIndex: activePieceIndex,
