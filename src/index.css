@@ -40,8 +40,12 @@ body {
     background: blue;
   }
 
-  .activePlayer0 {
+  .activePlayer0.valid{
     border: 2px solid blue;
+  }
+
+  .activePlayer0.invalid{
+    border: 2px solid red;
   }
   
   .kbd-navigation .square:focus {

@@ -6,10 +6,12 @@ import update from 'immutability-helper';
 let boardSize = 20;
 
 function Square(props) {
-    const inactivePieceString = props.squareInfo.inactivePiecePlayerNumber == null ? '' : 'setPlayer' + props.squareInfo.inactivePiecePlayerNumber;
-    const activePieceString = props.squareInfo.activePiecePlayerNumber == null ? '' : 'activePlayer' + props.squareInfo.activePiecePlayerNumber;    return (
+    const inactivePieceString = props.squareInfo.inactivePiecePlayerNumber === null ? '' : 'setPlayer' + props.squareInfo.inactivePiecePlayerNumber;
+    const activePieceString = props.squareInfo.activePiecePlayerNumber === null ? '' : 'activePlayer' + props.squareInfo.activePiecePlayerNumber;    
+    const validLocationString = props.squareInfo.valid === true ? 'valid' : 'invalid'
+    return (
         <button
-            className={`square ${inactivePieceString + ' ' + activePieceString}`}
+            className={`square ${inactivePieceString} ${activePieceString} ${validLocationString}`}
             onClick={props.onClick}
         >
         </button>
@@ -19,6 +21,7 @@ function Square(props) {
 class Row extends React.Component {
     render () {
         const squares = [];
+        debugger;
         for (let j = 0; j < this.props.squares.length; j++) {
             squares.push(<Square 
                 key ={j} 
@@ -44,7 +47,11 @@ class Board extends React.Component {
                 key ={i} 
                 rowIndex = {i} 
                 squares = {this.props.rows[i].squares.map(square => {
-                    return {inactivePiecePlayerNumber: square.inactivePiecePlayerNumber, activePiecePlayerNumber: square.activePiecePlayerNumber};
+                    return {
+                        inactivePiecePlayerNumber: square.inactivePiecePlayerNumber,
+                        activePiecePlayerNumber: square.activePiecePlayerNumber,
+                        valid: square.valid,
+                    };
                 })}
                 onClick = {this.props.onClick}/>)
         } 
@@ -78,6 +85,7 @@ class Game extends React.Component {
                 activePiecePlayerNumber: null, 
                 inactivePieceIndex: null,
                 activePieceIndex: null,
+                valid: null,
             })}),
             pieces: makePieces({
                 playerNumber: 0, 
@@ -94,7 +102,7 @@ class Game extends React.Component {
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
-                if (action === 'drawInactive') {
+                if (action === 'drawInactive') { // draw fixed piece
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
                         inactivePiecePlayerNumber: piece.playerNumber,  
                         inactivePieceIndex: piece.pieceIndex,
@@ -108,11 +116,13 @@ class Game extends React.Component {
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
                         activePiecePlayerNumber: piece.playerNumber,  
                         activePieceIndex: piece.pieceIndex,
+                        valid: piece.valid,
                     }}}}});
                 } else if (action === 'eraseActive') {
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
                         activePiecePlayerNumber: null,  
                         activePieceIndex: null,
+                        valiid: null,
                     }}}}});
                 } else {
                     debugger;
@@ -165,11 +175,14 @@ class Game extends React.Component {
     movePiece(control) {
         const rows = this.state.rows;
 
-        const piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
+        let piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
         const erasedrows = this.piecesToCells(piece, rows, 'eraseActive'); 
+        debugger;
         // perform transformation       
-        this[control](piece[0])
-        const drawnRows = this.piecesToCells(piece, erasedrows, 'drawActive');
+        piece = this[control](piece[0]);
+        piece.valid = this.validLocation(piece);
+        debugger;
+        const drawnRows = this.piecesToCells([piece], erasedrows, 'drawActive');
 
         this.setState({
             rows: drawnRows,
@@ -321,12 +334,16 @@ class Game extends React.Component {
             const erasedRows = this.piecesToCells([pieces[activePieceIndex]], rows, 'eraseActive');
             newRows = this.piecesToCells([pieces[activePieceIndex]], erasedRows, 'drawInactive');
             activePieceIndex = null;   
+        //do nothing
+        } else { 
+            newPieces = pieces;
+            newRows = rows;
         }
 
         this.setState({
             pieces: newPieces,
             activePieceIndex: activePieceIndex,
-            rows: newRows
+            rows: newRows,
         })
     }
 }
