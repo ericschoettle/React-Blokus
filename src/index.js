@@ -90,14 +90,14 @@ class Game extends React.Component {
 
     // takes a piece and draws it on the board, in terms of rows/columns
     piecesToCells(pieces, rows, action) {
-        pieces.forEach((piece, pieceIndex) => {
+        pieces.forEach((piece) => {
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
                 if (action === 'drawInactive') {
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
                         inactivePiecePlayerNumber: piece.playerNumber,  
-                        inactivePieceIndex: pieceIndex,
+                        inactivePieceIndex: piece.pieceIndex,
                     }}}}});
                 } else if (action === 'eraseInactive') {
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
@@ -107,7 +107,7 @@ class Game extends React.Component {
                 } else if (action === 'drawActive') { // draw temp piece
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
                         activePiecePlayerNumber: piece.playerNumber,  
-                        activePieceIndex: pieceIndex,
+                        activePieceIndex: piece.pieceIndex,
                     }}}}});
                 } else if (action === 'eraseActive') {
                     rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
@@ -292,12 +292,12 @@ class Game extends React.Component {
 
         // put piece down
         } else if (activePieceIndex !== null && this.validLocation(newPieces[pieceIndex])) {
-            debugger;
+            newPieces = pieces;
             const erasedRows = this.piecesToCells([pieces[activePieceIndex]], rows, 'eraseActive');
             newRows = this.piecesToCells([pieces[activePieceIndex]], erasedRows, 'drawInactive');
             activePieceIndex = null;   
         }
-
+        debugger;
         this.setState({
             pieces: newPieces,
             activePieceIndex: activePieceIndex,
@@ -321,6 +321,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 0,
           centerX: 1,
           centerY: 1,
           active: false,
@@ -329,6 +330,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 1,
           centerX: 3,
           centerY: 1,
           active: false,
@@ -337,6 +339,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 2,
           centerX: 5,
           centerY: 2,
           active: false,
@@ -345,6 +348,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 3,
           centerX: 7,
           centerY: 1,
           active: false,
@@ -353,6 +357,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 4,
           centerX: 10,
           centerY: 2,
           active: false,
@@ -361,6 +366,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 5,
           centerX: 13,
           centerY: 2,
           active: false,
@@ -369,6 +375,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 6,
           centerX: 1,
           centerY: 4,
           active: false,
@@ -377,6 +384,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 7,
           centerX: 4,
           centerY: 5,
           active: false,
@@ -385,6 +393,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 8,
           centerX: 7,
           centerY: 5,
           active: false,
@@ -393,6 +402,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 9,
           centerX: 10,
           centerY: 6,
           active: false,
@@ -401,6 +411,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 10,
           centerX: 1,
           centerY: 9,
           active: false,
@@ -409,6 +420,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 11,
           centerX: 12,
           centerY: 14,
           active: false,
@@ -417,6 +429,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 12,
           centerX: 13,
           centerY: 8,
           active: false,
@@ -425,6 +438,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 13,
           centerX: 4,
           centerY: 9,
           active: false,
@@ -433,6 +447,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 14,
           centerX: 2,
           centerY: 14,
           active: false,
@@ -441,6 +456,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 15,
           centerX: 7,
           centerY: 9,
           active: false,
@@ -449,6 +465,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 16,
           centerX: 9,
           centerY: 11,
           active: false,
@@ -457,6 +474,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 17,
           centerX: 11,
           centerY: 11,
           active: false,
@@ -465,6 +483,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 18,
           centerX: 6,
           centerY: 14,
           active: false,
@@ -473,6 +492,7 @@ function makePieces(props) {
         {
           boardNumber: props.boardNumber,
           playerNumber: props.playerNumber,
+          pieceIndex: 19,
           centerX: 9,
           centerY: 14,
           active: false,
