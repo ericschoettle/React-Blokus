@@ -21,7 +21,6 @@ function Square(props) {
 class Row extends React.Component {
     render () {
         const squares = [];
-        debugger;
         for (let j = 0; j < this.props.squares.length; j++) {
             squares.push(<Square 
                 key ={j} 
@@ -40,7 +39,6 @@ class Row extends React.Component {
 
 class Board extends React.Component {
     render() {
-
         let rows = [];
         for (let i = 0; i < this.props.rows.length; i++) {
             rows.push(<Row 
@@ -87,6 +85,13 @@ class Game extends React.Component {
                 activePieceIndex: null,
                 valid: null,
             })}),
+            cells: this.makeCells({
+                inactivePiecePlayerNumber: null, 
+                activePiecePlayerNumber: null, 
+                inactivePieceIndex: null,
+                activePieceIndex: null,
+                valid: null,
+            }),
             pieces: makePieces({
                 playerNumber: 0, 
                 boardNumber: 0,
@@ -96,6 +101,20 @@ class Game extends React.Component {
         }
     }
 
+    makeCells(defaultObj){
+        let array = [];
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < boardSize; j++) {
+                let cell = {
+                    ...defaultObj,
+                    rowIndex: i,
+                    colIndex: j,
+                }
+                array.push(cell);
+            }            
+        }
+        return array;
+    }
     // takes a piece and draws it on the board, in terms of rows/columns
     piecesToCells(pieces, rows, action) {
         pieces.forEach((piece) => {
@@ -158,11 +177,17 @@ class Game extends React.Component {
             }
         });
 
+        let testRows = [];
+        for (let i = 0; i < boardSize; i++) {
+            const row = this.state.cells.filter( cell => cell.rowIndex === i);
+            testRows.push(row);
+        }
         return (
             <div className="game">
                 <div className="game-board">
                     <Board
                         rows={rows}
+                        testRows={testRows}
                         onClick={(x,y) => this.handleClick(x,y)}
                     />
                 </div>
@@ -177,7 +202,6 @@ class Game extends React.Component {
 
         let piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
         const erasedrows = this.piecesToCells(piece, rows, 'eraseActive'); 
-        debugger;
         // perform transformation       
         piece = this[control](piece[0]);
         piece.valid = this.validLocation(piece);
@@ -194,19 +218,20 @@ class Game extends React.Component {
         debugger;
         const rows = this.state.rows;
         let cornerTouch = false;
+        let invalidSquare = false;
         piece.cells.forEach(cell => {
             const x = piece.centerX + cell[0];
             const y = piece.centerY + cell[1];
             // test non-overlap
             if (rows[y].squares[x].inactivePiecePlayerNumber !== null) {
-                return false;
+                return invalidSquare = true;
             // test sides touch same player's pieces
             } else if ( (rows[y + 1] && rows[y + 1].squares[x] && rows[y + 1].squares[x].inactivePiecePlayerNumber === piece.playerNumber) 
                 || (rows[y - 1] && rows[y - 1].squares[x] && rows[y - 1].squares[x].inactivePiecePlayerNumber === piece.playerNumber)
                 || (rows[y].squares[x + 1] && rows[y].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber)
                 || (rows[y].squares[x - 1] && rows[y].squares[x - 1].inactivePiecePlayerNumber === piece.playerNumber)
             ){
-                return false;
+                return invalidSquare = true;
             // test if one corner touches
             } else if ((rows[y + 1] && rows[y + 1].squares[x + 1] && rows[y + 1].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber) 
                 || (rows[y + 1] && rows[y + 1].squares[x - 1] && rows[y + 1].squares[x - 1].inactivePiecePlayerNumber === piece.playerNumber)
@@ -216,7 +241,7 @@ class Game extends React.Component {
                 cornerTouch = true;
             }
         }); 
-        return cornerTouch;
+        return (!invalidSquare && cornerTouch); // no invalid pieces and one corner touching
     }
     testCellOffBoard(piece) {
         return function(cell, index, array) {
