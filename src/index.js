@@ -3,6 +3,36 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import update from 'immutability-helper';
 
+/** To DO list
+ * Functionality:
+ *  -Implement turns
+ *      - Rotate through players
+ *      - Advance when piece down on shared board
+ *      - Ability for players to leave cycle when they can't put any more pieces down
+ *      - Ability to move pieces back to original board
+ *  - End of game logic
+ *      - If everybody has quit
+ *      - Add up points and display
+ * 
+ * Bugs: 
+ *  - Test validity on piece move. 
+ * 
+ * Aesthetics:
+ *  - Indicate corners where each player can start
+ *  - Highlight the board of current player
+ *  - Make the shared board bigger/arrange everything.
+ * 
+ * Code cleaning:
+ *  - Clear up terminology of square vs. Cell
+ *  - switch [0,1] to {x: 0, y: 1}
+ *  - maybe: clean up rows/column leading to y,x. 
+ *  - See if I can fix the ugly in rows where I'm recreating squares. 
+ *  - Split onto multiple pages
+ * 
+ * Other: 
+ *   
+*/
+
 const boardSize = 20;
 const numberPlayers = 4;
 
@@ -109,6 +139,8 @@ const pieceTemplate = [
     },
 ];
 
+const boardCorners = [{x: 0, y: 0}, {x: boardSize-1, y: boardSize-1}, {x: 0, y: boardSize-1}, {x: boardSize-1, y: 0}];
+
 function Square(props) {
     const inactivePieceString = props.squareInfo.inactivePiecePlayerIndex === null ? '' : ' setPlayer' + props.squareInfo.inactivePiecePlayerIndex;
     const activePieceString = props.squareInfo.activePiecePlayerIndex === null ? '' : ' activePlayer' + props.squareInfo.activePiecePlayerIndex;    
@@ -124,7 +156,7 @@ function Square(props) {
 
 class Row extends React.Component {
     render () {
-        const squares = [];
+        let squares = [];
         for (let j = 0; j < this.props.squares.length; j++) {
             squares.push(<Square 
                 key ={j} 
@@ -199,7 +231,7 @@ class Game extends React.Component {
     makeCells(defaultObj){
         let array = [];
         let index = 0;
-        for (let i = 0; i < numberPlayers; i++) {
+        for (let i = 0; i < numberPlayers + 1; i++) {
             for (let j = 0; j < boardSize; j++) {
                 for (let k = 0; k < boardSize; k++) {
                     let cell = {
@@ -302,10 +334,10 @@ class Game extends React.Component {
         });
 
         let boards = [];
-        for (let i = 0; i < numberPlayers; i++) {
+        for (let i = 0; i < numberPlayers + 1; i++) {
             const rows = this.getRows(i);
             boards.push(
-                <div className="game-board">
+                <div className="player-board">
                     <Board
                         key={i}
                         boardIndex = {i}
@@ -351,12 +383,6 @@ class Game extends React.Component {
         return cells
     }
 
-    flatten(array) {
-        return array.reduce((flat, toFlatten) => {
-            return flat.concat(Array.isArray(toFlatten) ? this.flatten(toFlatten) : toFlatten);
-        }, []);
-    }
-
     movePiece(control) {
         const cells = this.state.cells
 
@@ -374,7 +400,9 @@ class Game extends React.Component {
         })
         // set state with new pieces, 
     }
-    // function will test if location is valid.
+
+    // function tests if location is valid.
+    // Need to make it accept first piece in corner, and each player gets their corner. 
     validLocation(piece) {
         let cornerTouch = false;
         let invalidSquare = false;
@@ -403,18 +431,20 @@ class Game extends React.Component {
             // test if any sides touch the same piece
             } else if (sides.some( side => { return side && side.inactivePiecePlayerIndex === piece.playerIndex} ) ){
                 return invalidSquare = true;
-            // test if at least one corner touches
-            } else if ( corners.some( corner => corner && corner.inactivePiecePlayerIndex === piece.playerIndex) ){
+            // test if piece is in corner OR at least one corner touches the same player's corner
+            } else if ( (x === boardCorners[piece.playerIndex].x && y === boardCorners[piece.playerIndex].y ) || corners.some( corner => corner && corner.inactivePiecePlayerIndex === piece.playerIndex) ){
                 cornerTouch = true;
             }
         }); 
         return (!invalidSquare && cornerTouch); // no invalid pieces and one corner touching
     }
+
     testCellOffBoard(piece) {
         return function(cell, index, array) {
             return (piece.centerX + cell[0] < 0 || piece.centerY + cell[1] < 0 || piece.centerX + cell[0] >= boardSize || piece.centerY + cell[1] >= boardSize)
         }
     }
+
     testPieceOffBoard(piece) {
         if (piece.cells.some(this.testCellOffBoard(piece))) {
           return true
@@ -512,11 +542,12 @@ class Game extends React.Component {
 
         // 'pick up' piece
         if (pieceIndex !== null && activePieceIndex === null) {
+            const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
+
             newPieces = update(pieces, {[pieceIndex]:{$merge:{
-                active: true
+                active: true,
+                boardIndex: numberPlayers,
             }}});
-            
-            const erasedCells = this.piecesToCells([newPieces[pieceIndex]], cells, 'eraseInactive');
             newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawActive');
             activePieceIndex = pieceIndex;
 

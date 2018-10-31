@@ -16,21 +16,6 @@ body {
   .status {
     margin-bottom: 10px;
   }
-  
-  /* .square {
-    background: #fff;
-    border: 1px solid #999;
-    float: left;
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 34px;
-    height: 34px;
-    margin-right: -1px;
-    margin-top: -1px;
-    padding: 0;
-    text-align: center;
-    width: 34px;
-  } */
 
   .square {
     background: #fff;
@@ -63,7 +48,7 @@ body {
     background: green;
   }
 
-  .activePlayer1.valid{
+  .activePlayer1{
     border: 2px solid green;
   }
 
@@ -71,7 +56,7 @@ body {
     background: purple;
   }
   
-  .activePlayer2.valid{
+  .activePlayer2{
     border: 2px solid purple;
   }
 
@@ -79,7 +64,7 @@ body {
     background: darkorange;
   }
   
-  .activePlayer3.valid{
+  .activePlayer3{
     border: 2px solid darkorange;
   }
 
@@ -96,7 +81,7 @@ body {
     flex-direction: row;
   }
 
-  .game-board {
+  .player-board {
     margin: 10px;
     float: left;
   }
