@@ -1,10 +1,10 @@
 body {
     font: 14px "Century Gothic", Futura, sans-serif;
-    margin: 20px;
+    margin: 2px;
   }
   
   ol, ul {
-    padding-left: 30px;
+    padding-left: 3px;
   }
   
   .board-row:after {
@@ -17,7 +17,7 @@ body {
     margin-bottom: 10px;
   }
   
-  .square {
+  /* .square {
     background: #fff;
     border: 1px solid #999;
     float: left;
@@ -30,6 +30,21 @@ body {
     padding: 0;
     text-align: center;
     width: 34px;
+  } */
+
+  .square {
+    background: #fff;
+    border: 1px solid #999;
+    float: left;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 10px;
+    height: 10px;
+    margin-right: -1px;
+    margin-top: -1px;
+    padding: 0;
+    text-align: center;
+    width: 10px;
   }
   
   .square:focus {
@@ -40,11 +55,35 @@ body {
     background: blue;
   }
 
-  .activePlayer0.valid{
+  .activePlayer0{
     border: 2px solid blue;
   }
 
-  .activePlayer0.invalid{
+  .setPlayer1 {
+    background: green;
+  }
+
+  .activePlayer1.valid{
+    border: 2px solid green;
+  }
+
+  .setPlayer2 {
+    background: purple;
+  }
+  
+  .activePlayer2.valid{
+    border: 2px solid purple;
+  }
+
+  .setPlayer3 {
+    background: darkorange;
+  }
+  
+  .activePlayer3.valid{
+    border: 2px solid darkorange;
+  }
+
+  .invalid{
     border: 2px solid red;
   }
   
@@ -56,7 +95,12 @@ body {
     display: flex;
     flex-direction: row;
   }
+
+  .game-board {
+    margin: 10px;
+    float: left;
+  }
   
   .game-info {
-    margin-left: 20px;
+    margin-left: 2px;
   }

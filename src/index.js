@@ -3,17 +3,121 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import update from 'immutability-helper';
 
-let boardSize = 20;
+const boardSize = 20;
+const numberPlayers = 4;
+
+const pieceTemplate = [
+    {
+      centerX: 1,
+      centerY: 1,
+      cells: [[0,0]],  
+    },
+    {
+      centerX: 3,
+      centerY: 1,
+      cells: [[0,0], [0,1]], 
+    },
+    {
+      centerX: 5,
+      centerY: 2,
+      cells: [[0,0], [0,1], [0,-1]], 
+    },
+    {
+      centerX: 7,
+      centerY: 1,
+      cells: [[0,0], [0,1], [1,0]],
+    },
+    {
+      centerX: 10,
+      centerY: 2,
+      cells: [[0,0], [0,1], [1,0], [0,-1]],
+    },
+    {
+      centerX: 13,
+      centerY: 2,
+      cells: [[0,0], [0,1], [0,2], [0,-1]],
+    },
+    {
+      centerX: 1,
+      centerY: 4,
+      cells: [[0,0], [0,1], [0,2], [1,0]], 
+    },
+    {
+      centerX: 4,
+      centerY: 5,
+      cells: [[0,0], [0,1], [1,1], [1,0]],
+    },
+    {
+      centerX: 7,
+      centerY: 5,
+      cells: [[0,0], [0,1], [1,0], [1,-1], [0,-1]],
+    },
+    {
+      centerX: 10,
+      centerY: 6,
+      cells: [[1,1], [0,1], [1,0], [1,-1], [0,-1]],
+    },
+    {
+      centerX: 1,
+      centerY: 9,
+      cells: [[0,0], [0,1], [0,2], [0,-1], [1,-1]],
+    },
+    {
+      centerX: 12,
+      centerY: 14,
+      cells: [[0,0], [1,0], [0,1], [0,-1], [-1,0]],  
+    },
+    {
+      centerX: 13,
+      centerY: 8,
+      cells: [[0,0], [0,1], [0,2], [0,-1], [0,-2]],
+    },
+    {
+      centerX: 4,
+      centerY: 9,
+      cells: [[0,0], [0,1], [-1,1], [0,-1], [1,-1]],
+    },
+    {
+      centerX: 2,
+      centerY: 14,
+      cells: [[-1,-1], [-1,0], [-1,1], [0,-1], [1,-1]], 
+    },
+    {
+      centerX: 7,
+      centerY: 9,
+      cells: [[0,0], [-1,0], [-1,1], [0,-1], [1,-1]], 
+    },
+    {
+      centerX: 9,
+      centerY: 11,
+      cells: [[0,0], [-1,0], [-1,1], [0,-1], [0,-2]],
+    },
+    {
+      centerX: 11,
+      centerY: 11,
+      cells: [[0,0], [1,0], [0,1], [0,-1], [0,-2]], 
+    },
+    {
+      centerX: 6,
+      centerY: 14,
+      cells: [[0,0], [1,0], [-1,1], [0,-1], [-1,0]],  
+    },
+    {
+      centerX: 9,
+      centerY: 14,
+      cells: [[0,0], [0,1], [-1,1], [0,-1], [1,1]],
+    },
+];
 
 function Square(props) {
-    const inactivePieceString = props.squareInfo.inactivePiecePlayerNumber === null ? '' : 'setPlayer' + props.squareInfo.inactivePiecePlayerNumber;
-    const activePieceString = props.squareInfo.activePiecePlayerNumber === null ? '' : 'activePlayer' + props.squareInfo.activePiecePlayerNumber;    
-    const validLocationString = props.squareInfo.valid === true ? 'valid' : 'invalid'
+    const inactivePieceString = props.squareInfo.inactivePiecePlayerIndex === null ? '' : ' setPlayer' + props.squareInfo.inactivePiecePlayerIndex;
+    const activePieceString = props.squareInfo.activePiecePlayerIndex === null ? '' : ' activePlayer' + props.squareInfo.activePiecePlayerIndex;    
+    const validLocationString = (props.squareInfo.valid === false) ? ' invalid' : '';
+
     return (
         <button
-            className={`square ${inactivePieceString} ${activePieceString} ${validLocationString}`}
-            onClick={props.onClick}
-        >
+            className={`square${inactivePieceString}${activePieceString}${validLocationString}`}
+            onClick={props.onClick}>
         </button>
     );
 }
@@ -36,18 +140,19 @@ class Row extends React.Component {
     }
 }
 
-
 class Board extends React.Component {
     render() {
         let rows = [];
         for (let i = 0; i < this.props.rows.length; i++) {
+            // this is ugly - I'm doing a bunch of work to recreate rows. Can I pass in the <Row/> itself to props, and just grab that? Or can I call get rows from here?
+            // OR, can I make the board's get cells function available here, and call it? Would be kinda cool to just pass inidicies and call as needed. 
             rows.push(<Row 
                 key ={i} 
                 rowIndex = {i} 
-                squares = {this.props.rows[i].squares.map(square => {
+                squares = {this.props.rows[i].map(square => {
                     return {
-                        inactivePiecePlayerNumber: square.inactivePiecePlayerNumber,
-                        activePiecePlayerNumber: square.activePiecePlayerNumber,
+                        inactivePiecePlayerIndex: square.inactivePiecePlayerIndex,
+                        activePiecePlayerIndex: square.activePiecePlayerIndex,
                         valid: square.valid,
                     };
                 })}
@@ -78,24 +183,14 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            rows: Array(boardSize).fill({squares:Array(boardSize).fill({
-                inactivePiecePlayerNumber: null, 
-                activePiecePlayerNumber: null, 
-                inactivePieceIndex: null,
-                activePieceIndex: null,
-                valid: null,
-            })}),
             cells: this.makeCells({
-                inactivePiecePlayerNumber: null, 
-                activePiecePlayerNumber: null, 
+                inactivePiecePlayerIndex: null, 
+                activePiecePlayerIndex: null, 
                 inactivePieceIndex: null,
                 activePieceIndex: null,
                 valid: null,
             }),
-            pieces: makePieces({
-                playerNumber: 0, 
-                boardNumber: 0,
-            }),
+            pieces: this.makePieces(),
             activePieceIndex: null,
             xIsNext: true,
         }
@@ -103,67 +198,96 @@ class Game extends React.Component {
 
     makeCells(defaultObj){
         let array = [];
-        for (let i = 0; i < boardSize; i++) {
+        let index = 0;
+        for (let i = 0; i < numberPlayers; i++) {
             for (let j = 0; j < boardSize; j++) {
-                let cell = {
-                    ...defaultObj,
-                    rowIndex: i,
-                    colIndex: j,
-                }
-                array.push(cell);
-            }            
+                for (let k = 0; k < boardSize; k++) {
+                    let cell = {
+                        ...defaultObj,
+                        boardIndex: i,
+                        rowIndex: j,
+                        colIndex: k,
+                        index: index,
+                    }
+                    array.push(cell);
+                    index += 1;
+                }            
+            }   
         }
         return array;
     }
+
+    makePieces() {
+        let pieceIndex = 0;
+        let pieces = [];
+        for (let playerIndex = 0; playerIndex < numberPlayers; playerIndex++) {
+            for (let i = 0; i < pieceTemplate.length; i++) {
+                const piece = pieceTemplate[i];
+                pieces.push({
+                    ...piece,
+                    playerIndex: playerIndex,
+                    boardIndex: playerIndex,
+                    pieceIndex: pieceIndex,
+                });
+                pieceIndex += 1;
+            }
+        }
+        return pieces;
+    }
+
     // takes a piece and draws it on the board, in terms of rows/columns
-    piecesToCells(pieces, rows, action) {
+    piecesToCells(pieces, cells, action) {
         pieces.forEach((piece) => {
+            const boardIndex = piece.boardIndex;
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
-                if (action === 'drawInactive') { // draw fixed piece
-                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
-                        inactivePiecePlayerNumber: piece.playerNumber,  
+                // todo: use case/break syntax
+                if (action === 'drawInactive') { // draw fixed piece                    
+                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+                    cells = update(cells, {[oldCell.index]:{$merge: {
+                        inactivePiecePlayerIndex: piece.playerIndex,  
                         inactivePieceIndex: piece.pieceIndex,
-                    }}}}});
+                    }}});
                 } else if (action === 'eraseInactive') {
-                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
-                        inactivePiecePlayerNumber: null,  
+                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+                    cells = update(cells, {[oldCell.index]:{$merge: {
+                        inactivePiecePlayerIndex: null,  
                         inactivePieceIndex: null,
-                    }}}}});
+                    }}});
                 } else if (action === 'drawActive') { // draw temp piece
-                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
-                        activePiecePlayerNumber: piece.playerNumber,  
+                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+                    cells = update(cells, {[oldCell.index]:{$merge: {
+                        activePiecePlayerIndex: piece.playerIndex,  
                         activePieceIndex: piece.pieceIndex,
                         valid: piece.valid,
-                    }}}}});
+                    }}});
                 } else if (action === 'eraseActive') {
-                    rows = update(rows, {[yCoord]:{squares:{[xCoord]:{$merge: {
-                        activePiecePlayerNumber: null,  
+                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+                    cells = update(cells, {[oldCell.index]:{$merge: {
+                        activePiecePlayerIndex: null,  
                         activePieceIndex: null,
-                        valiid: null,
-                    }}}}});
+                        valid: null,
+                    }}});
                 } else {
-                    debugger;
                     console.log(`Error in pieceToCells - invalid action '${action}'`)
                 }
             });
         });
-        return rows;
+        return cells;
     }
 
     componentDidMount() {
         // initialize board
-        const rows = this.state.rows
+        const cells = this.state.cells;
         const pieces = this.state.pieces;
-        const newRows = this.piecesToCells(pieces,rows, 'drawInactive');
+        const newCells = this.piecesToCells(pieces, cells, 'drawInactive');
         this.setState({
-            rows: newRows,
+            cells: newCells,
         })
     }
 
     render() {
-        const rows = this.state.rows;
         const controls = ['rotClock', 'rotCounterClock', 'flipV', 'flipH', 'moveLeft', 'moveRight', 'moveUp', 'moveDown'];
         const controlsJSX = controls.map(control => {
             if (this.state.activePieceIndex !== null) {
@@ -177,67 +301,110 @@ class Game extends React.Component {
             }
         });
 
-        let testRows = [];
-        for (let i = 0; i < boardSize; i++) {
-            const row = this.state.cells.filter( cell => cell.rowIndex === i);
-            testRows.push(row);
-        }
-        return (
-            <div className="game">
+        let boards = [];
+        for (let i = 0; i < numberPlayers; i++) {
+            const rows = this.getRows(i);
+            boards.push(
                 <div className="game-board">
                     <Board
+                        key={i}
+                        boardIndex = {i}
                         rows={rows}
-                        testRows={testRows}
-                        onClick={(x,y) => this.handleClick(x,y)}
+                        onClick={(x,y) => this.handleClick(x,y,i)}
                     />
                 </div>
+            )
+        }
+
+        return (
+            <div className="game">
+                {boards}
                 <div className="game-controls">
                     <ul>{controlsJSX}</ul> 
                 </div>
             </div>  
         );
     }
-    movePiece(control) {
-        const rows = this.state.rows;
 
-        let piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1);
-        const erasedrows = this.piecesToCells(piece, rows, 'eraseActive'); 
+    getRows(boardIndex) {
+        let rows = [];
+        for (let i = 0; i < boardSize; i++) {
+            rows.push(this.getCells(i, null, boardIndex));
+        }
+        return rows;
+    }
+
+    getCells(rowIndex, colIndex, boardIndex) {
+        let cells = this.state.cells.filter(cell => {
+            let match = true;
+            // true if match or unspecified
+            match = (match && (typeof rowIndex !== 'number' || rowIndex === cell.rowIndex));
+            match = (match && (typeof colIndex !== 'number' || colIndex === cell.colIndex));
+            match = (match && (typeof boardIndex !== 'number' || boardIndex === cell.boardIndex));
+            return match;
+        });
+        if (cells.length === 1) {
+            cells = cells[0];
+        } else if (cells.length === 0) {
+            cells = null;
+        }
+        return cells
+    }
+
+    flatten(array) {
+        return array.reduce((flat, toFlatten) => {
+            return flat.concat(Array.isArray(toFlatten) ? this.flatten(toFlatten) : toFlatten);
+        }, []);
+    }
+
+    movePiece(control) {
+        const cells = this.state.cells
+
+        let piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1); // why slice rather than grabbing by index directly? Some weird immutability thing?
+
+        const erasedCells = this.piecesToCells(piece, cells, 'eraseActive'); 
         // perform transformation       
         piece = this[control](piece[0]);
         piece.valid = this.validLocation(piece);
-        debugger;
-        const drawnRows = this.piecesToCells([piece], erasedrows, 'drawActive');
+
+        const newCells = this.piecesToCells([piece], erasedCells, 'drawActive');
 
         this.setState({
-            rows: drawnRows,
+            cells: newCells,
         })
         // set state with new pieces, 
     }
     // function will test if location is valid.
     validLocation(piece) {
-        debugger;
-        const rows = this.state.rows;
         let cornerTouch = false;
         let invalidSquare = false;
+        const boardIndex = piece.boardIndex;
         piece.cells.forEach(cell => {
             const x = piece.centerX + cell[0];
             const y = piece.centerY + cell[1];
+            const center = this.getCells(y, x, boardIndex);
+            const sides = [
+                this.getCells(y + 1, x, boardIndex),
+                this.getCells(y - 1, x, boardIndex),
+                this.getCells(y, x + 1, boardIndex),
+                this.getCells(y, x - 1, boardIndex),
+            ];
+
+            const corners = [
+                this.getCells(y + 1, x + 1, boardIndex),
+                this.getCells(y - 1, x + 1, boardIndex),
+                this.getCells(y + 1, x - 1, boardIndex),
+                this.getCells(y - 1, x - 1, boardIndex),
+            ];
+
             // test non-overlap
-            if (rows[y].squares[x].inactivePiecePlayerNumber !== null) {
+            if (center.inactivePiecePlayerIndex !== null) {
                 return invalidSquare = true;
-            // test sides touch same player's pieces
-            } else if ( (rows[y + 1] && rows[y + 1].squares[x] && rows[y + 1].squares[x].inactivePiecePlayerNumber === piece.playerNumber) 
-                || (rows[y - 1] && rows[y - 1].squares[x] && rows[y - 1].squares[x].inactivePiecePlayerNumber === piece.playerNumber)
-                || (rows[y].squares[x + 1] && rows[y].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber)
-                || (rows[y].squares[x - 1] && rows[y].squares[x - 1].inactivePiecePlayerNumber === piece.playerNumber)
-            ){
+            // test if any sides touch the same piece
+            } else if (sides.some( side => { return side && side.inactivePiecePlayerIndex === piece.playerIndex} ) ){
                 return invalidSquare = true;
-            // test if one corner touches
-            } else if ((rows[y + 1] && rows[y + 1].squares[x + 1] && rows[y + 1].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber) 
-                || (rows[y + 1] && rows[y + 1].squares[x - 1] && rows[y + 1].squares[x - 1].inactivePiecePlayerNumber === piece.playerNumber)
-                || (rows[y - 1] && rows[y - 1].squares[x + 1] && rows[y - 1].squares[x + 1].inactivePiecePlayerNumber === piece.playerNumber)
-                || (rows[y - 1] && rows[y - 1].squares[x -1] && rows[y - 1].squares[x -1].inactivePiecePlayerNumber === piece.playerNumber)
-            ){
+            // test if at least one corner touches
+            } else if ( corners.some( corner => corner && corner.inactivePiecePlayerIndex === piece.playerIndex) ){
                 cornerTouch = true;
             }
         }); 
@@ -333,14 +500,14 @@ class Game extends React.Component {
       }
 
 
-    handleClick(centerX, centerY) {
-        const rows = this.state.rows;
-        // const squares = rows.slice();
-        const pieceIndex = rows[centerY].squares[centerX].inactivePieceIndex;
+    handleClick(centerX, centerY, boardIndex) {
+        const cells = this.state.cells;
+        const cell = this.getCells(centerY, centerX, boardIndex);
+        debugger;
+        const pieceIndex = cell.inactivePieceIndex;
         const pieces = this.state.pieces.slice();
-
         let newPieces = [];
-        let newRows = [];
+        let newCells = [];
         let activePieceIndex = this.state.activePieceIndex;
 
         // 'pick up' piece
@@ -349,27 +516,27 @@ class Game extends React.Component {
                 active: true
             }}});
             
-            const erasedRows = this.piecesToCells([newPieces[pieceIndex]], rows, 'eraseInactive');
-            newRows = this.piecesToCells([newPieces[pieceIndex]], erasedRows, 'drawActive');
+            const erasedCells = this.piecesToCells([newPieces[pieceIndex]], cells, 'eraseInactive');
+            newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawActive');
             activePieceIndex = pieceIndex;
 
         // put piece down
         } else if (activePieceIndex !== null && this.validLocation(pieces[activePieceIndex])) {
             newPieces = pieces;
-            const erasedRows = this.piecesToCells([pieces[activePieceIndex]], rows, 'eraseActive');
-            newRows = this.piecesToCells([pieces[activePieceIndex]], erasedRows, 'drawInactive');
+            const erasedCells = this.piecesToCells([pieces[activePieceIndex]], cells, 'eraseActive');
+            newCells = this.piecesToCells([pieces[activePieceIndex]], erasedCells, 'drawInactive');
             activePieceIndex = null;   
         //do nothing
         } else { 
             newPieces = pieces;
-            newRows = rows;
+            newCells = cells;
         }
 
         this.setState({
             pieces: newPieces,
             activePieceIndex: activePieceIndex,
-            rows: newRows,
-        })
+            cells: newCells,
+        });
     }
 }
 
@@ -382,188 +549,3 @@ ReactDOM.render(
     document.getElementById('root')
 );
 
-
-function makePieces(props) {
-    return [
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 0,
-          centerX: 1,
-          centerY: 1,
-          active: false,
-          cells: [[0,0]],  
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 1,
-          centerX: 3,
-          centerY: 1,
-          active: false,
-          cells: [[0,0], [0,1]], 
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 2,
-          centerX: 5,
-          centerY: 2,
-          active: false,
-          cells: [[0,0], [0,1], [0,-1]], 
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 3,
-          centerX: 7,
-          centerY: 1,
-          active: false,
-          cells: [[0,0], [0,1], [1,0]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 4,
-          centerX: 10,
-          centerY: 2,
-          active: false,
-          cells: [[0,0], [0,1], [1,0], [0,-1]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 5,
-          centerX: 13,
-          centerY: 2,
-          active: false,
-          cells: [[0,0], [0,1], [0,2], [0,-1]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 6,
-          centerX: 1,
-          centerY: 4,
-          active: false,
-          cells: [[0,0], [0,1], [0,2], [1,0]], 
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 7,
-          centerX: 4,
-          centerY: 5,
-          active: false,
-          cells: [[0,0], [0,1], [1,1], [1,0]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 8,
-          centerX: 7,
-          centerY: 5,
-          active: false,
-          cells: [[0,0], [0,1], [1,0], [1,-1], [0,-1]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 9,
-          centerX: 10,
-          centerY: 6,
-          active: false,
-          cells: [[1,1], [0,1], [1,0], [1,-1], [0,-1]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 10,
-          centerX: 1,
-          centerY: 9,
-          active: false,
-          cells: [[0,0], [0,1], [0,2], [0,-1], [1,-1]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 11,
-          centerX: 12,
-          centerY: 14,
-          active: false,
-          cells: [[0,0], [1,0], [0,1], [0,-1], [-1,0]],  
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 12,
-          centerX: 13,
-          centerY: 8,
-          active: false,
-          cells: [[0,0], [0,1], [0,2], [0,-1], [0,-2]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 13,
-          centerX: 4,
-          centerY: 9,
-          active: false,
-          cells: [[0,0], [0,1], [-1,1], [0,-1], [1,-1]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 14,
-          centerX: 2,
-          centerY: 14,
-          active: false,
-          cells: [[-1,-1], [-1,0], [-1,1], [0,-1], [1,-1]], 
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 15,
-          centerX: 7,
-          centerY: 9,
-          active: false,
-          cells: [[0,0], [-1,0], [-1,1], [0,-1], [1,-1]], 
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 16,
-          centerX: 9,
-          centerY: 11,
-          active: false,
-          cells: [[0,0], [-1,0], [-1,1], [0,-1], [0,-2]],
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 17,
-          centerX: 11,
-          centerY: 11,
-          active: false,
-          cells: [[0,0], [1,0], [0,1], [0,-1], [0,-2]], 
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 18,
-          centerX: 6,
-          centerY: 14,
-          active: false,
-          cells: [[0,0], [1,0], [-1,1], [0,-1], [-1,0]],  
-        },
-        {
-          boardNumber: props.boardNumber,
-          playerNumber: props.playerNumber,
-          pieceIndex: 19,
-          centerX: 9,
-          centerY: 14,
-          active: false,
-          cells: [[0,0], [0,1], [-1,1], [0,-1], [1,1]],
-        },
-    ]
-}
