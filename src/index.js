@@ -5,11 +5,6 @@ import update from 'immutability-helper';
 
 /** To DO list
  * Functionality:
- *  -Implement turns
- *      - Rotate through players
- *      - Advance when piece down on shared board
- *      - Ability for players to leave cycle when they can't put any more pieces down
- *      - Ability to move pieces back to original board
  *  - End of game logic
  *      - If everybody has quit
  *      - Add up points and display
@@ -30,7 +25,7 @@ import update from 'immutability-helper';
  *  - Split onto multiple pages
  * 
  * Other: 
- *   
+ *   - Map onto keys
 */
 
 const boardSize = 20;
@@ -191,7 +186,8 @@ class Board extends React.Component {
                 onClick = {this.props.onClick}/>)
         } 
         return (
-            <div>
+
+            <div className={this.props.active ? "player-board active" : "player-board"}>
                 {rows}
             </div>
         );
@@ -224,7 +220,8 @@ class Game extends React.Component {
             }),
             pieces: this.makePieces(),
             activePieceIndex: null,
-            xIsNext: true,
+            currentPlayer: 0,
+            currentPlayers: [0,1,2,3],
         }
     }
 
@@ -320,9 +317,10 @@ class Game extends React.Component {
     }
 
     render() {
-        const controls = ['rotClock', 'rotCounterClock', 'flipV', 'flipH', 'moveLeft', 'moveRight', 'moveUp', 'moveDown'];
-        const controlsJSX = controls.map(control => {
-            if (this.state.activePieceIndex !== null) {
+        const controls = ['rotClock', 'rotCounterClock', 'flipV', 'flipH', 'moveLeft', 'moveRight', 'moveUp', 'moveDown', 'returnToBoard'];
+        let controlsJSX; 
+        if (this.state.activePieceIndex !== null) {
+            controlsJSX = controls.map(control => {
                 return (
                     <li key= {control}>
                         <button onClick = {() => this.movePiece(control)}>
@@ -330,21 +328,26 @@ class Game extends React.Component {
                         </button>
                     </li>
                 );
-            }
-        });
+            });
+        } else {
+            controlsJSX = 
+                <button onClick = {() => this.removePlayer()}>
+                    No more moves
+                </button>
+        }
+
 
         let boards = [];
         for (let i = 0; i < numberPlayers + 1; i++) {
             const rows = this.getRows(i);
             boards.push(
-                <div className="player-board">
-                    <Board
-                        key={i}
-                        boardIndex = {i}
-                        rows={rows}
-                        onClick={(x,y) => this.handleClick(x,y,i)}
-                    />
-                </div>
+                <Board
+                    key={i}
+                    boardIndex = {i}
+                    active={this.state.currentPlayer === i}
+                    rows={rows}
+                    onClick={(x,y) => this.handleClick(x,y,i)}
+                />
             )
         }
 
@@ -385,7 +388,8 @@ class Game extends React.Component {
 
     movePiece(control) {
         const cells = this.state.cells
-
+        let newCells = [];
+        let activePieceIndex = this.state.activePieceIndex;
         let piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1); // why slice rather than grabbing by index directly? Some weird immutability thing?
 
         const erasedCells = this.piecesToCells(piece, cells, 'eraseActive'); 
@@ -393,12 +397,17 @@ class Game extends React.Component {
         piece = this[control](piece[0]);
         piece.valid = this.validLocation(piece);
 
-        const newCells = this.piecesToCells([piece], erasedCells, 'drawActive');
+        if (control === 'returnToBoard') {
+            newCells = this.piecesToCells([piece], erasedCells, 'drawInactive');
+            activePieceIndex = null;
+        } else {
+            newCells = this.piecesToCells([piece], erasedCells, 'drawActive');
+        }
 
         this.setState({
             cells: newCells,
+            activePieceIndex: activePieceIndex,
         })
-        // set state with new pieces, 
     }
 
     // function tests if location is valid.
@@ -529,44 +538,91 @@ class Game extends React.Component {
         return piece
       }
 
+    returnToBoard(piece) {
+        const template = pieceTemplate[piece.pieceIndex % pieceTemplate.length]
+        piece.centerX = template.centerX;
+        piece.centerY = template.centerY;
+        piece.boardIndex = piece.playerIndex;
 
-    handleClick(centerX, centerY, boardIndex) {
-        const cells = this.state.cells;
-        const cell = this.getCells(centerY, centerX, boardIndex);
-        debugger;
-        const pieceIndex = cell.inactivePieceIndex;
-        const pieces = this.state.pieces.slice();
-        let newPieces = [];
-        let newCells = [];
-        let activePieceIndex = this.state.activePieceIndex;
+        return piece;
+    }
 
-        // 'pick up' piece
-        if (pieceIndex !== null && activePieceIndex === null) {
-            const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
+    removePlayer() {
+        let currentPlayers = this.state.currentPlayers;
+        let currentPlayer = this.state.currentPlayer;
+        // advance player
 
-            newPieces = update(pieces, {[pieceIndex]:{$merge:{
-                active: true,
-                boardIndex: numberPlayers,
-            }}});
-            newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawActive');
-            activePieceIndex = pieceIndex;
+        const currentPlayerIndex = currentPlayers.indexOf(currentPlayer)
+        // remove player
+        currentPlayers.splice(currentPlayerIndex, 1);
 
-        // put piece down
-        } else if (activePieceIndex !== null && this.validLocation(pieces[activePieceIndex])) {
-            newPieces = pieces;
-            const erasedCells = this.piecesToCells([pieces[activePieceIndex]], cells, 'eraseActive');
-            newCells = this.piecesToCells([pieces[activePieceIndex]], erasedCells, 'drawInactive');
-            activePieceIndex = null;   
-        //do nothing
-        } else { 
-            newPieces = pieces;
-            newCells = cells;
-        }
+        // advance player
+        let nextPlayerIndex = currentPlayerIndex % currentPlayers.length;
+        currentPlayer = currentPlayers[nextPlayerIndex];
 
         this.setState({
-            pieces: newPieces,
-            activePieceIndex: activePieceIndex,
+            currentPlayers: currentPlayers,
+            currentPlayer: currentPlayer
+        })
+    }
+
+    pickUpPiece(pieceIndex, destinationBoardIndex) {
+        const cells = this.state.cells;
+        const pieces = this.state.pieces;
+        const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
+
+        const newPieces = update(pieces, {[pieceIndex]:{$merge:{
+            active: true,
+            boardIndex: destinationBoardIndex,
+        }}});
+        const newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawActive');
+        this.setState({
             cells: newCells,
+            pieces: newPieces,
+        });
+    }
+
+    putDownPiece(pieceIndex) {
+        const cells = this.state.cells;
+        const pieces = this.state.pieces;
+        const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseActive');
+
+        const newPieces = update(pieces, {[pieceIndex]:{$merge:{
+            active: false,
+        }}});
+        const newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawInactive');
+        this.setState({
+            cells: newCells,
+            pieces: newPieces,
+        });
+    }
+
+    handleClick(centerX, centerY, boardIndex) {
+        let currentPlayer = this.state.currentPlayer;
+        let currentPlayers = this.state.currentPlayers;
+
+        const cell = this.getCells(centerY, centerX, boardIndex);
+        const pieceIndex = cell.inactivePieceIndex;
+
+        const pieces = this.state.pieces.slice();
+        let activePieceIndex = this.state.activePieceIndex;
+        debugger;
+        if (boardIndex === currentPlayer && pieceIndex !== null && activePieceIndex === null) {
+            this.pickUpPiece(pieceIndex, numberPlayers); 
+            activePieceIndex = pieceIndex;
+
+        } else if (activePieceIndex !== null && this.validLocation(pieces[activePieceIndex])) {
+            this.putDownPiece(activePieceIndex);
+            activePieceIndex = null;
+
+            // Advance player
+            let nextPlayerIndex = (currentPlayers.indexOf(currentPlayer) + 1) % currentPlayers.length;
+            currentPlayer = currentPlayers[nextPlayerIndex];
+        } 
+
+        this.setState({
+            activePieceIndex: activePieceIndex,
+            currentPlayer: currentPlayer,
         });
     }
 }

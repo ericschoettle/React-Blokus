@@ -17,6 +17,10 @@ body {
     margin-bottom: 10px;
   }
 
+  .active {
+    border: 4px solid black;
+  }
+
   .square {
     background: #fff;
     border: 1px solid #999;
