@@ -4,28 +4,24 @@ import './index.css';
 import update from 'immutability-helper';
 
 /** To DO list
- * Functionality:
- *  - End of game logic
- *      - If everybody has quit
- *      - Add up points and display
- * 
- * Bugs: 
- *  - Test validity on piece move. 
  * 
  * Aesthetics:
  *  - Indicate corners where each player can start
- *  - Highlight the board of current player
- *  - Make the shared board bigger/arrange everything.
+ *  - Lay out page - bootstrap cols?. 
+ *  - Shrink player boards
  * 
  * Code cleaning:
  *  - Clear up terminology of square vs. Cell
  *  - switch [0,1] to {x: 0, y: 1}
  *  - maybe: clean up rows/column leading to y,x. 
  *  - See if I can fix the ugly in rows where I'm recreating squares. 
- *  - Split onto multiple pages
+ *  - Split into multiple files
+ *  - Consolidate logic for advancing player, and test if game is done. 
  * 
  * Other: 
  *   - Map onto keys
+ *   - Explanatory text - rules, goal, etc.
+ *   - Link to github/my website
 */
 
 const boardSize = 20;
@@ -142,10 +138,10 @@ function Square(props) {
     const validLocationString = (props.squareInfo.valid === false) ? ' invalid' : '';
 
     return (
-        <button
-            className={`square${inactivePieceString}${activePieceString}${validLocationString}`}
+        <td
+            className={`${inactivePieceString}${activePieceString}${validLocationString}`}
             onClick={props.onClick}>
-        </button>
+        </td>
     );
 }
 
@@ -160,9 +156,9 @@ class Row extends React.Component {
             />)
         }
         return (
-            <div className="board-row">
+            <tr>
                 {squares}
-            </div>
+            </tr>
         )
     }
 }
@@ -186,26 +182,17 @@ class Board extends React.Component {
                 onClick = {this.props.onClick}/>)
         } 
         return (
-
-            <div className={this.props.active ? "player-board active" : "player-board"}>
-                {rows}
-            </div>
+            <table className={this.props.shared ? "shared-board" : (this.props.active ? "player-board active" : "player-board")}>
+                <tbody>
+                    {rows}
+                </tbody>
+                <caption>{(this.props.finalScore) ? `Final Score: ${this.props.finalScore}` : null}</caption>
+            </table>
         );
     }
 }
 
-// class Player extends React.Component {
-//     constructor(props) {
-//         super(props);
-//         this.state = {
-//             // name: props.name,
-//             number: props.number,
-//             // color: props.color,
-//         }
-//     }
 
-//     placePiece
-// }
 
 class Game extends React.Component {
     constructor(props) {
@@ -220,6 +207,10 @@ class Game extends React.Component {
             }),
             pieces: this.makePieces(),
             activePieceIndex: null,
+            players: Array(numberPlayers).fill({
+                finalScore: null,
+                name: null,
+            }),
             currentPlayer: 0,
             currentPlayers: [0,1,2,3],
         }
@@ -338,13 +329,15 @@ class Game extends React.Component {
 
 
         let boards = [];
+        debugger;
         for (let i = 0; i < numberPlayers + 1; i++) {
             const rows = this.getRows(i);
             boards.push(
                 <Board
                     key={i}
-                    boardIndex = {i}
+                    finalScore = {(i < numberPlayers) ? this.state.players[i].finalScore: null}
                     active={this.state.currentPlayer === i}
+                    shared={numberPlayers === i}
                     rows={rows}
                     onClick={(x,y) => this.handleClick(x,y,i)}
                 />
@@ -353,9 +346,11 @@ class Game extends React.Component {
 
         return (
             <div className="game">
-                {boards}
-                <div className="game-controls">
-                    <ul>{controlsJSX}</ul> 
+                <div>
+                    {boards}
+                    <div className="game-controls">
+                        <ul>{controlsJSX}</ul> 
+                    </div>
                 </div>
             </div>  
         );
@@ -549,21 +544,57 @@ class Game extends React.Component {
 
     removePlayer() {
         let currentPlayers = this.state.currentPlayers;
-        let currentPlayer = this.state.currentPlayer;
-        // advance player
+        const currentPlayer = this.state.currentPlayer;
 
-        const currentPlayerIndex = currentPlayers.indexOf(currentPlayer)
         // remove player
+        const currentPlayerIndex = currentPlayers.indexOf(currentPlayer)
         currentPlayers.splice(currentPlayerIndex, 1);
-
-        // advance player
-        let nextPlayerIndex = currentPlayerIndex % currentPlayers.length;
-        currentPlayer = currentPlayers[nextPlayerIndex];
 
         this.setState({
             currentPlayers: currentPlayers,
+        });
+
+        this.advancePlayer()
+    }
+
+    advancePlayer() {
+        let currentPlayers = this.state.currentPlayers;
+        let currentPlayer = this.state.currentPlayer;
+
+        let nextPlayerIndex = (currentPlayers.indexOf(currentPlayer) + 1) % currentPlayers.length;
+        currentPlayer = currentPlayers[nextPlayerIndex];
+        if (!currentPlayer) {
+            this.endGame();
+        }
+
+        this.setState({
             currentPlayer: currentPlayer
         })
+    }
+
+    endGame() {
+        const players = this.state.players.map((player, i) => {
+            return {
+                ...player,
+                finalScore: this.remainingPoints(i)
+            };
+        });
+        debugger;
+        this.setState({
+            players: players
+        });
+    }
+
+    remainingPoints(playerIndex) {
+        let pieces = this.state.pieces
+        let score = pieces.reduce((sum, piece) => {
+            if (piece.playerIndex === playerIndex && piece.boardIndex === playerIndex) {
+                return sum += piece.cells.length;
+            } else {
+                return sum;
+            }
+        }, 0)
+        return score;
     }
 
     pickUpPiece(pieceIndex, destinationBoardIndex) {
@@ -572,9 +603,13 @@ class Game extends React.Component {
         const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
 
         const newPieces = update(pieces, {[pieceIndex]:{$merge:{
+            centerX: Math.round(boardSize/2),
+            centerY: Math.round(boardSize/2),
+            valid: this.validLocation(pieces[pieceIndex]),
             active: true,
             boardIndex: destinationBoardIndex,
         }}});
+
         const newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawActive');
         this.setState({
             cells: newCells,
@@ -599,14 +634,13 @@ class Game extends React.Component {
 
     handleClick(centerX, centerY, boardIndex) {
         let currentPlayer = this.state.currentPlayer;
-        let currentPlayers = this.state.currentPlayers;
 
         const cell = this.getCells(centerY, centerX, boardIndex);
         const pieceIndex = cell.inactivePieceIndex;
 
         const pieces = this.state.pieces.slice();
         let activePieceIndex = this.state.activePieceIndex;
-        debugger;
+
         if (boardIndex === currentPlayer && pieceIndex !== null && activePieceIndex === null) {
             this.pickUpPiece(pieceIndex, numberPlayers); 
             activePieceIndex = pieceIndex;
@@ -615,14 +649,15 @@ class Game extends React.Component {
             this.putDownPiece(activePieceIndex);
             activePieceIndex = null;
 
-            // Advance player
-            let nextPlayerIndex = (currentPlayers.indexOf(currentPlayer) + 1) % currentPlayers.length;
-            currentPlayer = currentPlayers[nextPlayerIndex];
+            if (this.remainingPoints()) {
+                this.advancePlayer();
+            } else {
+                this.removePlayer();
+            }
         } 
 
         this.setState({
             activePieceIndex: activePieceIndex,
-            currentPlayer: currentPlayer,
         });
     }
 }

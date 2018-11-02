@@ -2,94 +2,95 @@ body {
     font: 14px "Century Gothic", Futura, sans-serif;
     margin: 2px;
   }
+
+  .game {
+    display: flex;
+    flex-direction: row;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .invalid {
+    border: 3px solid red !important;
+  }
   
   ol, ul {
     padding-left: 3px;
-  }
-  
-  .board-row:after {
-    clear: both;
-    content: "";
-    display: table;
   }
   
   .status {
     margin-bottom: 10px;
   }
 
-  .active {
+  .player-board.active {
     border: 4px solid black;
+    margin: 6px;
   }
 
-  .square {
-    background: #fff;
-    border: 1px solid #999;
+  td {
+    background: #fff; 
+    border-spacing: 0;
+    border-collapse: collapse;
+  }
+
+  .player-board td {
+    border: 1px inset #999;
     float: left;
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 10px;
     height: 10px;
-    margin-right: -1px;
-    margin-top: -1px;
-    padding: 0;
-    text-align: center;
     width: 10px;
   }
-  
-  .square:focus {
-    outline: none;
+
+  .shared-board td {
+    border: 3px inset #999;
+    height: 20px;
+    width: 20px;
   }
 
   .setPlayer0 {
     background: blue;
   }
 
-  .activePlayer0{
-    border: 2px solid blue;
+  .shared-board .activePlayer0{
+    border: 3px solid blue;
   }
 
   .setPlayer1 {
     background: green;
   }
 
-  .activePlayer1{
-    border: 2px solid green;
+  .shared-board .activePlayer1{
+    border: 3px solid green;
   }
 
   .setPlayer2 {
     background: purple;
   }
   
-  .activePlayer2{
-    border: 2px solid purple;
+  .shared-board .activePlayer2{
+    border: 3px solid purple;
   }
 
   .setPlayer3 {
     background: darkorange;
   }
   
-  .activePlayer3{
-    border: 2px solid darkorange;
-  }
-
-  .invalid{
-    border: 2px solid red;
-  }
-  
-  .kbd-navigation .square:focus {
-    background: #ddd;
-  }
-  
-  .game {
-    display: flex;
-    flex-direction: row;
+  .shared-board .activePlayer3 {
+    border: 3px solid darkorange;
   }
 
   .player-board {
     margin: 10px;
     float: left;
   }
+
+  .shared-board {
+    margin: 100px;
+    float: left;
+  }
   
   .game-info {
-    margin-left: 2px;
+    margin-left: 10px;
   }
