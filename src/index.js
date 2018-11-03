@@ -24,7 +24,8 @@ import update from 'immutability-helper';
  *   - Link to github/my website
 */
 
-const boardSize = 20;
+const playerBoardSize = 17;
+const sharedBoardSize = 20;
 const numberPlayers = 4;
 
 const pieceTemplate = [
@@ -130,16 +131,17 @@ const pieceTemplate = [
     },
 ];
 
-const boardCorners = [{x: 0, y: 0}, {x: boardSize-1, y: boardSize-1}, {x: 0, y: boardSize-1}, {x: boardSize-1, y: 0}];
+const boardCorners = [{x: 0, y: 0}, {x: sharedBoardSize-1, y: sharedBoardSize-1}, {x: 0, y: sharedBoardSize-1}, {x: sharedBoardSize-1, y: 0}];
 
 function Square(props) {
-    const inactivePieceString = props.squareInfo.inactivePiecePlayerIndex === null ? '' : ' setPlayer' + props.squareInfo.inactivePiecePlayerIndex;
-    const activePieceString = props.squareInfo.activePiecePlayerIndex === null ? '' : ' activePlayer' + props.squareInfo.activePiecePlayerIndex;    
+    const cornerString = typeof props.squareInfo.corner !== 'number' ? '' : ' corner' + props.squareInfo.corner;
+    const inactivePieceString = typeof props.squareInfo.inactivePiecePlayerIndex !== 'number' ? '' : ' setPlayer' + props.squareInfo.inactivePiecePlayerIndex;
+    const activePieceString =  typeof props.squareInfo.activePiecePlayerIndex !== 'number' ? '' : ' activePlayer' + props.squareInfo.activePiecePlayerIndex;    
     const validLocationString = (props.squareInfo.valid === false) ? ' invalid' : '';
 
     return (
         <td
-            className={`${inactivePieceString}${activePieceString}${validLocationString}`}
+            className={`${cornerString}${inactivePieceString}${activePieceString}${validLocationString}`}
             onClick={props.onClick}>
         </td>
     );
@@ -174,6 +176,7 @@ class Board extends React.Component {
                 rowIndex = {i} 
                 squares = {this.props.rows[i].map(square => {
                     return {
+                        corner: square.corner,
                         inactivePiecePlayerIndex: square.inactivePiecePlayerIndex,
                         activePiecePlayerIndex: square.activePiecePlayerIndex,
                         valid: square.valid,
@@ -191,8 +194,6 @@ class Board extends React.Component {
         );
     }
 }
-
-
 
 class Game extends React.Component {
     constructor(props) {
@@ -219,9 +220,9 @@ class Game extends React.Component {
     makeCells(defaultObj){
         let array = [];
         let index = 0;
-        for (let i = 0; i < numberPlayers + 1; i++) {
-            for (let j = 0; j < boardSize; j++) {
-                for (let k = 0; k < boardSize; k++) {
+        for (let i = 0; i < numberPlayers; i++) {
+            for (let j = 0; j < playerBoardSize; j++) {
+                for (let k = 0; k < playerBoardSize; k++) {
                     let cell = {
                         ...defaultObj,
                         boardIndex: i,
@@ -234,6 +235,26 @@ class Game extends React.Component {
                 }            
             }   
         }
+        for (let j = 0; j < sharedBoardSize; j++) {
+            for (let k = 0; k < sharedBoardSize; k++) {
+                let corner = null;
+                boardCorners.forEach((boardCorner, index) => { 
+                    if (boardCorner.x === j && boardCorner.y === k) {
+                        corner = index;
+                    }
+                });
+                let cell = {
+                    ...defaultObj,
+                    boardIndex: numberPlayers,
+                    rowIndex: j,
+                    colIndex: k,
+                    index: index,
+                    corner: corner,
+                }
+                array.push(cell);
+                index += 1;
+            }            
+        }   
         return array;
     }
 
@@ -329,7 +350,6 @@ class Game extends React.Component {
 
 
         let boards = [];
-        debugger;
         for (let i = 0; i < numberPlayers + 1; i++) {
             const rows = this.getRows(i);
             boards.push(
@@ -358,9 +378,16 @@ class Game extends React.Component {
 
     getRows(boardIndex) {
         let rows = [];
-        for (let i = 0; i < boardSize; i++) {
-            rows.push(this.getCells(i, null, boardIndex));
+        if (boardIndex === numberPlayers) {
+            for (let i = 0; i < sharedBoardSize; i++) {
+                rows.push(this.getCells(i, null, boardIndex));
+            }
+        } else {
+            for (let i = 0; i < playerBoardSize; i++) {
+                rows.push(this.getCells(i, null, boardIndex));
+            }
         }
+
         return rows;
     }
 
@@ -445,7 +472,7 @@ class Game extends React.Component {
 
     testCellOffBoard(piece) {
         return function(cell, index, array) {
-            return (piece.centerX + cell[0] < 0 || piece.centerY + cell[1] < 0 || piece.centerX + cell[0] >= boardSize || piece.centerY + cell[1] >= boardSize)
+            return (piece.centerX + cell[0] < 0 || piece.centerY + cell[1] < 0 || piece.centerX + cell[0] >= sharedBoardSize || piece.centerY + cell[1] >= sharedBoardSize)
         }
     }
 
@@ -579,7 +606,6 @@ class Game extends React.Component {
                 finalScore: this.remainingPoints(i)
             };
         });
-        debugger;
         this.setState({
             players: players
         });
@@ -603,8 +629,8 @@ class Game extends React.Component {
         const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
 
         const newPieces = update(pieces, {[pieceIndex]:{$merge:{
-            centerX: Math.round(boardSize/2),
-            centerY: Math.round(boardSize/2),
+            centerX: Math.round(sharedBoardSize/2),
+            centerY: Math.round(sharedBoardSize/2),
             valid: this.validLocation(pieces[pieceIndex]),
             active: true,
             boardIndex: destinationBoardIndex,
