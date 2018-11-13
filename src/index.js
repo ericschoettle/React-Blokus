@@ -6,9 +6,7 @@ import update from 'immutability-helper';
 /** To DO list
  * 
  * Aesthetics:
- *  - Indicate corners where each player can start
  *  - Lay out page - bootstrap cols?. 
- *  - Shrink player boards
  * 
  * Code cleaning:
  *  - Clear up terminology of square vs. Cell
@@ -175,12 +173,7 @@ class Board extends React.Component {
                 key ={i} 
                 rowIndex = {i} 
                 squares = {this.props.rows[i].map(square => {
-                    return {
-                        corner: square.corner,
-                        inactivePiecePlayerIndex: square.inactivePiecePlayerIndex,
-                        activePiecePlayerIndex: square.activePiecePlayerIndex,
-                        valid: square.valid,
-                    };
+                    return {...square};
                 })}
                 onClick = {this.props.onClick}/>)
         } 
@@ -258,6 +251,27 @@ class Game extends React.Component {
         return array;
     }
 
+    keyDownHandler(key) {
+        console.log('keydown', key)
+        const keyToActionMap = {
+            ArrowUp: 'moveUp',
+            ArrowDown: 'moveDown',
+            ArrowRight: 'moveRight',
+            ArrowLeft: 'moveLeft',
+            KeyF: 'rotClock', 
+            KeyS: 'rotCounterClock', 
+            KeyE: 'flipV', 
+            KeyD: 'flipH',
+        }
+
+        const action = keyToActionMap[key.code];
+
+        if (action) {
+            this.movePiece(action);
+        }
+
+    }
+
     makePieces() {
         let pieceIndex = 0;
         let pieces = [];
@@ -278,6 +292,9 @@ class Game extends React.Component {
 
     // takes a piece and draws it on the board, in terms of rows/columns
     piecesToCells(pieces, cells, action) {
+        if (pieces.constructor !== Array) {
+            pieces = [pieces];
+        }
         pieces.forEach((piece) => {
             const boardIndex = piece.boardIndex;
             piece.cells.forEach(cell => {
@@ -326,10 +343,11 @@ class Game extends React.Component {
         this.setState({
             cells: newCells,
         })
+        document.addEventListener("keydown", this.keyDownHandler.bind(this));
     }
 
     render() {
-        const controls = ['rotClock', 'rotCounterClock', 'flipV', 'flipH', 'moveLeft', 'moveRight', 'moveUp', 'moveDown', 'returnToBoard'];
+        const controls = ['returnToBoard'];
         let controlsJSX; 
         if (this.state.activePieceIndex !== null) {
             controlsJSX = controls.map(control => {
@@ -365,7 +383,7 @@ class Game extends React.Component {
         }
 
         return (
-            <div className="game">
+            <div className="game" onKeyDown={this.keyDownHandler}>
                 <div>
                     {boards}
                     <div className="game-controls">
@@ -408,18 +426,18 @@ class Game extends React.Component {
         return cells
     }
 
-    movePiece(control) {
+    movePiece(action) {
         const cells = this.state.cells
         let newCells = [];
         let activePieceIndex = this.state.activePieceIndex;
-        let piece = this.state.pieces.slice(this.state.activePieceIndex, this.state.activePieceIndex + 1); // why slice rather than grabbing by index directly? Some weird immutability thing?
+        let piece = this.state.pieces[this.state.activePieceIndex]
 
         const erasedCells = this.piecesToCells(piece, cells, 'eraseActive'); 
         // perform transformation       
-        piece = this[control](piece[0]);
+        piece = this[action](piece);
         piece.valid = this.validLocation(piece);
 
-        if (control === 'returnToBoard') {
+        if (action === 'returnToBoard') {
             newCells = this.piecesToCells([piece], erasedCells, 'drawInactive');
             activePieceIndex = null;
         } else {
@@ -687,7 +705,6 @@ class Game extends React.Component {
         });
     }
 }
-
 
 
 // ========================================
