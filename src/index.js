@@ -6,7 +6,12 @@ import update from 'immutability-helper';
 /** To DO list
  * 
  * Aesthetics:
- *  - Lay out page - bootstrap cols?. 
+ *  - Bring back 'back to board' button. 
+ *  
+ * 
+ * Readme
+ * 
+ * Heroku
  * 
  * Code cleaning:
  *  - Clear up terminology of square vs. Cell
@@ -14,11 +19,8 @@ import update from 'immutability-helper';
  *  - maybe: clean up rows/column leading to y,x. 
  *  - See if I can fix the ugly in rows where I'm recreating squares. 
  *  - Split into multiple files
- *  - Consolidate logic for advancing player, and test if game is done. 
  * 
  * Other: 
- *   - Map onto keys
- *   - Explanatory text - rules, goal, etc.
  *   - Link to github/my website
 */
 
@@ -178,12 +180,14 @@ class Board extends React.Component {
                 onClick = {this.props.onClick}/>)
         } 
         return (
-            <table className={this.props.shared ? "shared-board" : (this.props.active ? "player-board active" : "player-board")}>
-                <tbody>
-                    {rows}
-                </tbody>
-                <caption>{(this.props.finalScore) ? `Final Score: ${this.props.finalScore}` : null}</caption>
-            </table>
+            <div className={this.props.shared ? "col-6" : "col-3"}>
+                <table className={this.props.shared ? "shared-board" : (this.props.active ? "player-board active" : "player-board")}>
+                    <tbody>
+                        {rows}
+                    </tbody>
+                    <caption>{(this.props.finalScore) ? `Final Score: ${this.props.finalScore}` : null}</caption>
+                </table>
+            </div>
         );
     }
 }
@@ -347,30 +351,25 @@ class Game extends React.Component {
     }
 
     render() {
-        const controls = ['returnToBoard'];
-        let controlsJSX; 
+        // Setup buttons
+        let buttons; 
         if (this.state.activePieceIndex !== null) {
-            controlsJSX = controls.map(control => {
-                return (
-                    <li key= {control}>
-                        <button onClick = {() => this.movePiece(control)}>
-                            {control}
-                        </button>
-                    </li>
-                );
-            });
+            buttons = 
+                <button className="btn btn-primary" onClick = {() => this.movePiece(this.returnToBoard)}>
+                    Return Piece to Board
+                </button>
         } else {
-            controlsJSX = 
-                <button onClick = {() => this.removePlayer()}>
+            buttons = 
+                <button className="btn btn-primary" onClick = {() => this.removePlayer()}>
                     No more moves
                 </button>
         }
 
-
-        let boards = [];
-        for (let i = 0; i < numberPlayers + 1; i++) {
+        // Set up boards
+        let playerBoards = [];
+        for (let i = 0; i < numberPlayers; i++) {
             const rows = this.getRows(i);
-            boards.push(
+            playerBoards.push(
                 <Board
                     key={i}
                     finalScore = {(i < numberPlayers) ? this.state.players[i].finalScore: null}
@@ -381,16 +380,65 @@ class Game extends React.Component {
                 />
             )
         }
+        const sharedRows = this.getRows(numberPlayers);
+        let sharedBoard =       
+            <Board
+                key={numberPlayers}
+                finalScore ={null}
+                active={false}
+                shared={true}
+                rows={sharedRows}
+                onClick={(x,y) => this.handleClick(x,y,numberPlayers)}
+            />
+        
 
         return (
-            <div className="game" onKeyDown={this.keyDownHandler}>
-                <div>
-                    {boards}
-                    <div className="game-controls">
-                        <ul>{controlsJSX}</ul> 
+            <div className="container" onKeyDown={this.keyDownHandler}>
+                <div className="header">
+                    <div className="text-center"> 
+                        <h1><b>Blockus</b><span className="asterisk">*</span></h1>
+                    </div>
+                    <div className="how-to"> 
+                        <div>
+                            <b>Rules:</b>
+                            <div><br /></div>
+                            <ul>
+                                <li>Play rotates through players</li>
+                                <li>Starting pieces must be played in the corner matching the player's color.</li>
+                                <li>Pieces can only be played where they touch at least one of the same players pieces corner-to-corner, do not touch the same players pieces side-to-side, and do not overlap with other player's pieces</li>
+                                <li>The player with the fewest unplayed pieces at the end wins!</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <b>How to move pieces:</b>
+                            <div><br /></div>
+                            <ul>
+                                <li>Click on piece to move to game board</li>
+                                <li>Arrow keys to move piece</li>
+                                <li>"F" to rotate clockwise, "S" to rotate counter-clockwise</li>
+                                <li>"A" to flip vertically, "D" to flip horizontally</li>
+                                <li>Click on piece to place and advance to next player</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>  
+                <div className="game">
+                    <div className="row">
+                        {playerBoards}
+                    </div>
+                    <div className="row justify-content-center">
+                        {sharedBoard}
+                    </div>
+                    <div>{buttons}</div>
+                </div> 
+                <div className="disclaimer"> 
+                    <p>* Please, if you happen to be associated with Blokus (tm), don't fuss over this little thing. 
+                        It's just a simple side project by an admirer of your game. It's challenging and elegant, easy to learn and hard to master.
+                        I built it to have fun and learn React - I have no intention to make a profit here. Thanks for understanding!
+                    </p>
+                </div>
+            </div>
         );
     }
 
