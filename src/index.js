@@ -272,7 +272,6 @@ class Game extends React.Component {
     }
 
     keyDownHandler(key) {
-        console.log('keydown', key);
         const keyToActionMap = {
             ArrowUp: 'moveUp',
             ArrowDown: 'moveDown',
@@ -287,21 +286,18 @@ class Game extends React.Component {
 
         const action = keyToActionMap[key.code]
 
-        if (this.state.activePieceIndex) {
-            if (action) {
-                debugger;
-                if (action === 'putDownPiece' && this.validLocation(this.state.pieces[this.state.activePieceIndex])) {
-                    this.putDownPiece(this.state.activePieceIndex);
-        
-                    if (this.remainingPoints()) {
-                        this.advancePlayer();
-                    } else {
-                        this.removePlayer();
-                    }
+        if (this.state.activePieceIndex && action) { // If there isn't an active piece, or the key is invalid, do nothing. 
+            if (action === 'putDownPiece' && this.validLocation(this.state.pieces[this.state.activePieceIndex])) {
+                this.putDownPiece(this.state.activePieceIndex);
+                // Advance player unless last piece 
+                if (this.remainingPoints()) {
+                    this.advancePlayer();
                 } else {
-                    this.movePiece(action);
-                } 
-            }
+                    this.removePlayer();
+                }
+            } else {
+                this.movePiece(action);
+            } 
         }   
     }
 
@@ -497,8 +493,10 @@ class Game extends React.Component {
         let activePieceIndex = this.state.activePieceIndex;
         let piece = this.state.pieces[this.state.activePieceIndex]
 
+        // Erase cells before moving piece
         const erasedCells = this.piecesToCells(piece, cells, 'eraseActive'); 
-        // perform transformation       
+
+        // perform transformation on piece      
         piece = this[action](piece);
         piece.valid = this.validLocation(piece);
 
@@ -567,81 +565,81 @@ class Game extends React.Component {
         }
       }
 
-      moveLeft(piece) {
+    moveLeft(piece) {
         piece.centerX -= 1
         if (this.testPieceOffBoard(piece)) {
-          this.moveRight(piece)
+            this.moveRight(piece)
         }
         return piece
-      }
-    
-      moveRight(piece) {
+    }
+
+    moveRight(piece) {
         piece.centerX += 1
         if (this.testPieceOffBoard(piece)) {
-          this.moveLeft(piece)
+            this.moveLeft(piece)
         }
         return piece
-      }
-    
-      moveUp(piece) {
+    }
+
+    moveUp(piece) {
         piece.centerY -= 1
         if (this.testPieceOffBoard(piece)) {
-          this.moveDown(piece)
+            this.moveDown(piece)
         }
         return piece
-      }
-    
-      moveDown(piece) {
+    }
+
+    moveDown(piece) {
         piece.centerY += 1
         if (this.testPieceOffBoard(piece)) {
-          this.moveUp(piece)
+            this.moveUp(piece)
         }
         return piece
-      }
-    
-      flipH(piece) {
+    }
+
+    flipH(piece) {
         piece.cells.forEach((cell) => {
-          cell[0] = -cell[0]
+            cell[0] = -cell[0]
         })
         if (this.testPieceOffBoard(piece)) {
-          this.flipH(piece)
+            this.flipH(piece)
         }
         return piece
-      }
-    
-      flipV(piece) {
+    }
+
+    flipV(piece) {
         piece.cells.forEach((cell) => {
-          cell[1] = -cell[1]
+            cell[1] = -cell[1]
         })
         if (this.testPieceOffBoard(piece)) {
-          this.flipV(piece)
+            this.flipV(piece)
         }
         return piece
-      }
-    
-      rotCounterClock(piece) {
+    }
+
+    rotCounterClock(piece) {
         piece.cells.forEach((cell) => {
-          var tempX = cell[0]
-          cell[0] = cell[1]
-          cell[1] = -tempX
+            var tempX = cell[0]
+            cell[0] = cell[1]
+            cell[1] = -tempX
         })
         if (this.testPieceOffBoard(piece)) {
-          this.rotClock(piece)
+            this.rotClock(piece)
         }
         return piece
-      }
-      
-      rotClock(piece) {
+    }
+
+    rotClock(piece) {
         piece.cells.forEach((cell) => {
-          var tempX = cell[0]
-          cell[0] = -cell[1]
-          cell[1] = tempX
+            var tempX = cell[0]
+            cell[0] = -cell[1]
+            cell[1] = tempX
         })
         if (this.testPieceOffBoard(piece)) {
-          this.rotCounterClock(piece)
+            this.rotCounterClock(piece)
         }
         return piece
-      }
+    }
 
     returnToBoard(piece) {
         const template = pieceTemplate[piece.pieceIndex % pieceTemplate.length]
