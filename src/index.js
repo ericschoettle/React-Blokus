@@ -6,14 +6,16 @@ import update from 'immutability-helper';
 /** To DO list
  * 
  * Aesthetics:
- *  - Bring back 'back to board' button. 
- *  
+ *  - Dynamic sizing!!!
+ *  - Remove corner coloring after first round
+ *  - Center buttons to remove player, etc. 
  * 
  * Readme
  * 
  * Heroku
  * 
  * Code cleaning:
+ *  - Move "return to board" off of the move piece function. 
  *  - Clear up terminology of square vs. Cell
  *  - switch [0,1] to {x: 0, y: 1}
  *  - maybe: clean up rows/column leading to y,x. 
@@ -167,6 +169,20 @@ class Row extends React.Component {
 
 class Board extends React.Component {
     render() {
+        // Setup buttons
+        let button; 
+        if (this.props.active && this.props.activePieceIndex !== null) {
+            button = 
+                <button className="btn btn-primary btn-sm" onClick = {() => this.props.movePiece('returnToBoard')}>
+                    Return Piece to Board
+                </button>
+        } else if (this.props.active) {
+            button = 
+                <button className="btn btn-primary btn-sm" onClick = {() => this.props.removePlayer()}>
+                    No more moves
+                </button>
+        }
+
         let rows = [];
         for (let i = 0; i < this.props.rows.length; i++) {
             // this is ugly - I'm doing a bunch of work to recreate rows. Can I pass in the <Row/> itself to props, and just grab that? Or can I call get rows from here?
@@ -185,7 +201,7 @@ class Board extends React.Component {
                     <tbody>
                         {rows}
                     </tbody>
-                    <caption>{(this.props.finalScore) ? `Final Score: ${this.props.finalScore}` : null}</caption>
+                    <caption>{(this.props.finalScore) ? `Final Score: ${this.props.finalScore}` : button}</caption>
                 </table>
             </div>
         );
@@ -256,7 +272,7 @@ class Game extends React.Component {
     }
 
     keyDownHandler(key) {
-        console.log('keydown', key)
+        console.log('keydown', key);
         const keyToActionMap = {
             ArrowUp: 'moveUp',
             ArrowDown: 'moveDown',
@@ -266,14 +282,27 @@ class Game extends React.Component {
             KeyS: 'rotCounterClock', 
             KeyE: 'flipV', 
             KeyD: 'flipH',
+            Space: 'putDownPiece'
         }
 
-        const action = keyToActionMap[key.code];
+        const action = keyToActionMap[key.code]
 
-        if (action) {
-            this.movePiece(action);
-        }
-
+        if (this.state.activePieceIndex) {
+            if (action) {
+                debugger;
+                if (action === 'putDownPiece' && this.validLocation(this.state.pieces[this.state.activePieceIndex])) {
+                    this.putDownPiece(this.state.activePieceIndex);
+        
+                    if (this.remainingPoints()) {
+                        this.advancePlayer();
+                    } else {
+                        this.removePlayer();
+                    }
+                } else {
+                    this.movePiece(action);
+                } 
+            }
+        }   
     }
 
     makePieces() {
@@ -351,20 +380,6 @@ class Game extends React.Component {
     }
 
     render() {
-        // Setup buttons
-        let buttons; 
-        if (this.state.activePieceIndex !== null) {
-            buttons = 
-                <button className="btn btn-primary" onClick = {() => this.movePiece(this.returnToBoard)}>
-                    Return Piece to Board
-                </button>
-        } else {
-            buttons = 
-                <button className="btn btn-primary" onClick = {() => this.removePlayer()}>
-                    No more moves
-                </button>
-        }
-
         // Set up boards
         let playerBoards = [];
         for (let i = 0; i < numberPlayers; i++) {
@@ -374,6 +389,9 @@ class Game extends React.Component {
                     key={i}
                     finalScore = {(i < numberPlayers) ? this.state.players[i].finalScore: null}
                     active={this.state.currentPlayer === i}
+                    activePieceIndex={this.state.activePieceIndex}
+                    movePiece={this.movePiece.bind(this)}
+                    removePlayer={this.removePlayer.bind(this)}
                     shared={numberPlayers === i}
                     rows={rows}
                     onClick={(x,y) => this.handleClick(x,y,i)}
@@ -418,7 +436,7 @@ class Game extends React.Component {
                                 <li>Arrow keys to move piece</li>
                                 <li>"F" to rotate clockwise, "S" to rotate counter-clockwise</li>
                                 <li>"A" to flip vertically, "D" to flip horizontally</li>
-                                <li>Click on piece to place and advance to next player</li>
+                                <li>Space bar to place a piece and advance to next player</li>
                             </ul>
                         </div>
                     </div>
@@ -430,7 +448,6 @@ class Game extends React.Component {
                     <div className="row justify-content-center">
                         {sharedBoard}
                     </div>
-                    <div>{buttons}</div>
                 </div> 
                 <div className="disclaimer"> 
                     <p>* Please, if you happen to be associated with Blokus (tm), don't fuss over this little thing. 
@@ -706,6 +723,7 @@ class Game extends React.Component {
         this.setState({
             cells: newCells,
             pieces: newPieces,
+            activePieceIndex: pieceIndex
         });
     }
 
@@ -721,6 +739,7 @@ class Game extends React.Component {
         this.setState({
             cells: newCells,
             pieces: newPieces,
+            activePieceIndex: null,
         });
     }
 
@@ -735,7 +754,6 @@ class Game extends React.Component {
 
         if (boardIndex === currentPlayer && pieceIndex !== null && activePieceIndex === null) {
             this.pickUpPiece(pieceIndex, numberPlayers); 
-            activePieceIndex = pieceIndex;
 
         } else if (activePieceIndex !== null && this.validLocation(pieces[activePieceIndex])) {
             this.putDownPiece(activePieceIndex);
@@ -747,10 +765,6 @@ class Game extends React.Component {
                 this.removePlayer();
             }
         } 
-
-        this.setState({
-            activePieceIndex: activePieceIndex,
-        });
     }
 }
 
