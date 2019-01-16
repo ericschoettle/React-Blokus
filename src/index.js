@@ -188,7 +188,7 @@ class Board extends React.Component {
             // this is ugly - I'm doing a bunch of work to recreate rows. Can I pass in the <Row/> itself to props, and just grab that? Or can I call get rows from here?
             // OR, can I make the board's get cells function available here, and call it? Would be kinda cool to just pass inidicies and call as needed. 
             rows.push(<Row 
-                key ={i} 
+                key={i} 
                 rowIndex = {i} 
                 squares = {this.props.rows[i].map(square => {
                     return {...square};
@@ -229,6 +229,7 @@ class Game extends React.Component {
             currentPlayers: [0,1,2,3],
         }
     }
+    
 
     makeCells(defaultObj){
         let array = [];
