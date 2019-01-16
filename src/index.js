@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import update from 'immutability-helper';
+
+import Square from './square.js'
+import './index.css';
+
 
 /** To DO list
  * 
@@ -135,20 +138,6 @@ const pieceTemplate = [
 
 const boardCorners = [{x: 0, y: 0}, {x: sharedBoardSize-1, y: sharedBoardSize-1}, {x: 0, y: sharedBoardSize-1}, {x: sharedBoardSize-1, y: 0}];
 
-function Square(props) {
-    const cornerString = typeof props.squareInfo.corner !== 'number' ? '' : ' corner' + props.squareInfo.corner;
-    const inactivePieceString = typeof props.squareInfo.inactivePiecePlayerIndex !== 'number' ? '' : ' setPlayer' + props.squareInfo.inactivePiecePlayerIndex;
-    const activePieceString =  typeof props.squareInfo.activePiecePlayerIndex !== 'number' ? '' : ' activePlayer' + props.squareInfo.activePiecePlayerIndex;    
-    const validLocationString = (props.squareInfo.valid === false) ? ' invalid' : '';
-
-    return (
-        <td
-            className={`${cornerString}${inactivePieceString}${activePieceString}${validLocationString}`}
-            onClick={props.onClick}>
-        </td>
-    );
-}
-
 class Row extends React.Component {
     render () {
         let squares = [];
@@ -273,6 +262,7 @@ class Game extends React.Component {
     }
 
     keyDownHandler(key) {
+        console.log(key);
         const keyToActionMap = {
             ArrowUp: 'moveUp',
             ArrowDown: 'moveDown',
@@ -287,7 +277,7 @@ class Game extends React.Component {
 
         const action = keyToActionMap[key.code]
 
-        if (this.state.activePieceIndex && action) { // If there isn't an active piece, or the key is invalid, do nothing. 
+        if (this.state.activePieceIndex !== null && action) { // If there isn't an active piece, or the key is invalid, do nothing. 
             if (action === 'putDownPiece' && this.validLocation(this.state.pieces[this.state.activePieceIndex])) {
                 this.putDownPiece(this.state.activePieceIndex);
                 // Advance player unless last piece 
