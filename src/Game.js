@@ -8,116 +8,116 @@ const numberPlayers = 4;
 
 const pieceTemplate = [
     {
-      centerX: 1,
-      centerY: 1,
-      cells: [[0,0]],  
+        centerX: 1,
+        centerY: 1,
+        cells: [[0, 0]],
     },
     {
-      centerX: 3,
-      centerY: 1,
-      cells: [[0,0], [0,1]], 
+        centerX: 3,
+        centerY: 1,
+        cells: [[0, 0], [0, 1]],
     },
     {
-      centerX: 5,
-      centerY: 2,
-      cells: [[0,0], [0,1], [0,-1]], 
+        centerX: 5,
+        centerY: 2,
+        cells: [[0, 0], [0, 1], [0, -1]],
     },
     {
-      centerX: 7,
-      centerY: 1,
-      cells: [[0,0], [0,1], [1,0]],
+        centerX: 7,
+        centerY: 1,
+        cells: [[0, 0], [0, 1], [1, 0]],
     },
     {
-      centerX: 10,
-      centerY: 2,
-      cells: [[0,0], [0,1], [1,0], [0,-1]],
+        centerX: 10,
+        centerY: 2,
+        cells: [[0, 0], [0, 1], [1, 0], [0, -1]],
     },
     {
-      centerX: 13,
-      centerY: 2,
-      cells: [[0,0], [0,1], [0,2], [0,-1]],
+        centerX: 13,
+        centerY: 2,
+        cells: [[0, 0], [0, 1], [0, 2], [0, -1]],
     },
     {
-      centerX: 1,
-      centerY: 4,
-      cells: [[0,0], [0,1], [0,2], [1,0]], 
+        centerX: 1,
+        centerY: 4,
+        cells: [[0, 0], [0, 1], [0, 2], [1, 0]],
     },
     {
-      centerX: 4,
-      centerY: 5,
-      cells: [[0,0], [0,1], [1,1], [1,0]],
+        centerX: 4,
+        centerY: 5,
+        cells: [[0, 0], [0, 1], [1, 1], [1, 0]],
     },
     {
-      centerX: 7,
-      centerY: 5,
-      cells: [[0,0], [0,1], [1,0], [1,-1], [0,-1]],
+        centerX: 7,
+        centerY: 5,
+        cells: [[0, 0], [0, 1], [1, 0], [1, -1], [0, -1]],
     },
     {
-      centerX: 10,
-      centerY: 6,
-      cells: [[1,1], [0,1], [1,0], [1,-1], [0,-1]],
+        centerX: 10,
+        centerY: 6,
+        cells: [[1, 1], [0, 1], [1, 0], [1, -1], [0, -1]],
     },
     {
-      centerX: 1,
-      centerY: 9,
-      cells: [[0,0], [0,1], [0,2], [0,-1], [1,-1]],
+        centerX: 1,
+        centerY: 9,
+        cells: [[0, 0], [0, 1], [0, 2], [0, -1], [1, -1]],
     },
     {
-      centerX: 12,
-      centerY: 14,
-      cells: [[0,0], [1,0], [0,1], [0,-1], [-1,0]],  
+        centerX: 12,
+        centerY: 14,
+        cells: [[0, 0], [1, 0], [0, 1], [0, -1], [-1, 0]],
     },
     {
-      centerX: 13,
-      centerY: 8,
-      cells: [[0,0], [0,1], [0,2], [0,-1], [0,-2]],
+        centerX: 13,
+        centerY: 8,
+        cells: [[0, 0], [0, 1], [0, 2], [0, -1], [0, -2]],
     },
     {
-      centerX: 4,
-      centerY: 9,
-      cells: [[0,0], [0,1], [-1,1], [0,-1], [1,-1]],
+        centerX: 4,
+        centerY: 9,
+        cells: [[0, 0], [0, 1], [-1, 1], [0, -1], [1, -1]],
     },
     {
-      centerX: 2,
-      centerY: 14,
-      cells: [[-1,-1], [-1,0], [-1,1], [0,-1], [1,-1]], 
+        centerX: 2,
+        centerY: 14,
+        cells: [[-1, -1], [-1, 0], [-1, 1], [0, -1], [1, -1]],
     },
     {
-      centerX: 7,
-      centerY: 9,
-      cells: [[0,0], [-1,0], [-1,1], [0,-1], [1,-1]], 
+        centerX: 7,
+        centerY: 9,
+        cells: [[0, 0], [-1, 0], [-1, 1], [0, -1], [1, -1]],
     },
     {
-      centerX: 9,
-      centerY: 11,
-      cells: [[0,0], [-1,0], [-1,1], [0,-1], [0,-2]],
+        centerX: 9,
+        centerY: 11,
+        cells: [[0, 0], [-1, 0], [-1, 1], [0, -1], [0, -2]],
     },
     {
-      centerX: 11,
-      centerY: 11,
-      cells: [[0,0], [1,0], [0,1], [0,-1], [0,-2]], 
+        centerX: 11,
+        centerY: 11,
+        cells: [[0, 0], [1, 0], [0, 1], [0, -1], [0, -2]],
     },
     {
-      centerX: 6,
-      centerY: 14,
-      cells: [[0,0], [1,0], [-1,1], [0,-1], [-1,0]],  
+        centerX: 6,
+        centerY: 14,
+        cells: [[0, 0], [1, 0], [-1, 1], [0, -1], [-1, 0]],
     },
     {
-      centerX: 9,
-      centerY: 14,
-      cells: [[0,0], [0,1], [-1,1], [0,-1], [1,1]],
+        centerX: 9,
+        centerY: 14,
+        cells: [[0, 0], [0, 1], [-1, 1], [0, -1], [1, 1]],
     },
 ];
 
-const boardCorners = [{x: 0, y: 0}, {x: sharedBoardSize-1, y: sharedBoardSize-1}, {x: 0, y: sharedBoardSize-1}, {x: sharedBoardSize-1, y: 0}];
+const boardCorners = [{ x: 0, y: 0 }, { x: sharedBoardSize - 1, y: sharedBoardSize - 1 }, { x: 0, y: sharedBoardSize - 1 }, { x: sharedBoardSize - 1, y: 0 }];
 
 class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             cells: this.makeCells({
-                inactivePiecePlayerIndex: null, 
-                activePiecePlayerIndex: null, 
+                inactivePiecePlayerIndex: null,
+                activePiecePlayerIndex: null,
                 inactivePieceIndex: null,
                 activePieceIndex: null,
                 valid: null,
@@ -129,12 +129,12 @@ class Game extends React.Component {
                 name: null,
             }),
             currentPlayer: 0,
-            currentPlayers: [0,1,2,3],
+            currentPlayers: [0, 1, 2, 3],
         }
     }
-    
 
-    makeCells(defaultObj){
+
+    makeCells(defaultObj) {
         let array = [];
         let index = 0;
         for (let i = 0; i < numberPlayers; i++) {
@@ -149,13 +149,13 @@ class Game extends React.Component {
                     }
                     array.push(cell);
                     index += 1;
-                }            
-            }   
+                }
+            }
         }
         for (let j = 0; j < sharedBoardSize; j++) {
             for (let k = 0; k < sharedBoardSize; k++) {
                 let corner = null;
-                boardCorners.forEach((boardCorner, index) => { 
+                boardCorners.forEach((boardCorner, index) => {
                     if (boardCorner.x === j && boardCorner.y === k) {
                         corner = index;
                     }
@@ -170,8 +170,8 @@ class Game extends React.Component {
                 }
                 array.push(cell);
                 index += 1;
-            }            
-        }   
+            }
+        }
         return array;
     }
 
@@ -182,9 +182,9 @@ class Game extends React.Component {
             ArrowDown: 'moveDown',
             ArrowRight: 'moveRight',
             ArrowLeft: 'moveLeft',
-            KeyF: 'rotClock', 
-            KeyS: 'rotCounterClock', 
-            KeyE: 'flipV', 
+            KeyF: 'rotClock',
+            KeyS: 'rotCounterClock',
+            KeyE: 'flipV',
             KeyD: 'flipH',
             Space: 'putDownPiece'
         }
@@ -202,8 +202,8 @@ class Game extends React.Component {
                 }
             } else {
                 this.movePiece(action);
-            } 
-        }   
+            }
+        }
     }
 
     makePieces() {
@@ -237,30 +237,46 @@ class Game extends React.Component {
                 // todo: use case/break syntax
                 if (action === 'drawInactive') { // draw fixed piece                    
                     let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {[oldCell.index]:{$merge: {
-                        inactivePiecePlayerIndex: piece.playerIndex,  
-                        inactivePieceIndex: piece.pieceIndex,
-                    }}});
+                    cells = update(cells, {
+                        [oldCell.index]: {
+                            $merge: {
+                                inactivePiecePlayerIndex: piece.playerIndex,
+                                inactivePieceIndex: piece.pieceIndex,
+                            }
+                        }
+                    });
                 } else if (action === 'eraseInactive') {
                     let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {[oldCell.index]:{$merge: {
-                        inactivePiecePlayerIndex: null,  
-                        inactivePieceIndex: null,
-                    }}});
+                    cells = update(cells, {
+                        [oldCell.index]: {
+                            $merge: {
+                                inactivePiecePlayerIndex: null,
+                                inactivePieceIndex: null,
+                            }
+                        }
+                    });
                 } else if (action === 'drawActive') { // draw temp piece
                     let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {[oldCell.index]:{$merge: {
-                        activePiecePlayerIndex: piece.playerIndex,  
-                        activePieceIndex: piece.pieceIndex,
-                        valid: piece.valid,
-                    }}});
+                    cells = update(cells, {
+                        [oldCell.index]: {
+                            $merge: {
+                                activePiecePlayerIndex: piece.playerIndex,
+                                activePieceIndex: piece.pieceIndex,
+                                valid: piece.valid,
+                            }
+                        }
+                    });
                 } else if (action === 'eraseActive') {
                     let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {[oldCell.index]:{$merge: {
-                        activePiecePlayerIndex: null,  
-                        activePieceIndex: null,
-                        valid: null,
-                    }}});
+                    cells = update(cells, {
+                        [oldCell.index]: {
+                            $merge: {
+                                activePiecePlayerIndex: null,
+                                activePieceIndex: null,
+                                valid: null,
+                            }
+                        }
+                    });
                 } else {
                     console.log(`Error in pieceToCells - invalid action '${action}'`)
                 }
@@ -288,36 +304,36 @@ class Game extends React.Component {
             playerBoards.push(
                 <Board
                     key={i}
-                    finalScore = {(i < numberPlayers) ? this.state.players[i].finalScore: null}
+                    finalScore={(i < numberPlayers) ? this.state.players[i].finalScore : null}
                     active={this.state.currentPlayer === i}
                     activePieceIndex={this.state.activePieceIndex}
                     movePiece={this.movePiece.bind(this)}
                     removePlayer={this.removePlayer.bind(this)}
                     shared={numberPlayers === i}
                     rows={rows}
-                    onClick={(x,y) => this.handleClick(x,y,i)}
+                    onClick={(x, y) => this.handleClick(x, y, i)}
                 />
             )
         }
         const sharedRows = this.getRows(numberPlayers);
-        let sharedBoard =       
+        let sharedBoard =
             <Board
                 key={numberPlayers}
-                finalScore ={null}
+                finalScore={null}
                 active={false}
                 shared={true}
                 rows={sharedRows}
-                onClick={(x,y) => this.handleClick(x,y,numberPlayers)}
+                onClick={(x, y) => this.handleClick(x, y, numberPlayers)}
             />
-        
+
 
         return (
             <div className="container" onKeyDown={this.keyDownHandler}>
                 <div className="header">
-                    <div className="text-center"> 
+                    <div className="text-center">
                         <h1><b>Blockus</b><span className="asterisk">*</span></h1>
                     </div>
-                    <div className="how-to"> 
+                    <div className="how-to">
                         <div>
                             <b>Rules:</b>
                             <div><br /></div>
@@ -349,9 +365,9 @@ class Game extends React.Component {
                     <div className="row justify-content-center">
                         {sharedBoard}
                     </div>
-                </div> 
-                <div className="disclaimer"> 
-                    <p>* Please, if you happen to be associated with Blokus (tm), don't fuss over this little thing. 
+                </div>
+                <div className="disclaimer">
+                    <p>* Please, if you happen to be associated with Blokus (tm), don't fuss over this little thing.
                         It's just a simple side project by an admirer of your game. It's challenging and elegant, easy to learn and hard to master.
                         I built it to have fun and learn React - I have no intention to make a profit here. Thanks for understanding!
                     </p>
@@ -399,7 +415,7 @@ class Game extends React.Component {
         let piece = this.state.pieces[this.state.activePieceIndex]
 
         // Erase cells before moving piece
-        const erasedCells = this.piecesToCells(piece, cells, 'eraseActive'); 
+        const erasedCells = this.piecesToCells(piece, cells, 'eraseActive');
 
         // perform transformation on piece      
         piece = this[action](piece);
@@ -445,30 +461,30 @@ class Game extends React.Component {
             // test non-overlap
             if (center.inactivePiecePlayerIndex !== null) {
                 return invalidSquare = true;
-            // test if any sides touch the same piece
-            } else if (sides.some( side => { return side && side.inactivePiecePlayerIndex === piece.playerIndex} ) ){
+                // test if any sides touch the same piece
+            } else if (sides.some(side => { return side && side.inactivePiecePlayerIndex === piece.playerIndex })) {
                 return invalidSquare = true;
-            // test if piece is in corner OR at least one corner touches the same player's corner
-            } else if ( (x === boardCorners[piece.playerIndex].x && y === boardCorners[piece.playerIndex].y ) || corners.some( corner => corner && corner.inactivePiecePlayerIndex === piece.playerIndex) ){
+                // test if piece is in corner OR at least one corner touches the same player's corner
+            } else if ((x === boardCorners[piece.playerIndex].x && y === boardCorners[piece.playerIndex].y) || corners.some(corner => corner && corner.inactivePiecePlayerIndex === piece.playerIndex)) {
                 cornerTouch = true;
             }
-        }); 
+        });
         return (!invalidSquare && cornerTouch); // no invalid pieces and one corner touching
     }
 
     testCellOffBoard(piece) {
-        return function(cell, index, array) {
+        return function (cell, index, array) {
             return (piece.centerX + cell[0] < 0 || piece.centerY + cell[1] < 0 || piece.centerX + cell[0] >= sharedBoardSize || piece.centerY + cell[1] >= sharedBoardSize)
         }
     }
 
     testPieceOffBoard(piece) {
         if (piece.cells.some(this.testCellOffBoard(piece))) {
-          return true
+            return true
         } else {
             // alert - piece off board
         }
-      }
+    }
 
     moveLeft(piece) {
         piece.centerX -= 1
@@ -614,13 +630,17 @@ class Game extends React.Component {
         const pieces = this.state.pieces;
         const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
 
-        const newPieces = update(pieces, {[pieceIndex]:{$merge:{
-            centerX: Math.round(sharedBoardSize/2),
-            centerY: Math.round(sharedBoardSize/2),
-            valid: this.validLocation(pieces[pieceIndex]),
-            active: true,
-            boardIndex: destinationBoardIndex,
-        }}});
+        const newPieces = update(pieces, {
+            [pieceIndex]: {
+                $merge: {
+                    centerX: Math.round(sharedBoardSize / 2),
+                    centerY: Math.round(sharedBoardSize / 2),
+                    valid: this.validLocation(pieces[pieceIndex]),
+                    active: true,
+                    boardIndex: destinationBoardIndex,
+                }
+            }
+        });
 
         const newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawActive');
         this.setState({
@@ -635,9 +655,13 @@ class Game extends React.Component {
         const pieces = this.state.pieces;
         const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseActive');
 
-        const newPieces = update(pieces, {[pieceIndex]:{$merge:{
-            active: false,
-        }}});
+        const newPieces = update(pieces, {
+            [pieceIndex]: {
+                $merge: {
+                    active: false,
+                }
+            }
+        });
         const newCells = this.piecesToCells([newPieces[pieceIndex]], erasedCells, 'drawInactive');
         this.setState({
             cells: newCells,
@@ -656,7 +680,7 @@ class Game extends React.Component {
         let activePieceIndex = this.state.activePieceIndex;
 
         if (boardIndex === currentPlayer && pieceIndex !== null && activePieceIndex === null) {
-            this.pickUpPiece(pieceIndex, numberPlayers); 
+            this.pickUpPiece(pieceIndex, numberPlayers);
 
         } else if (activePieceIndex !== null && this.validLocation(pieces[activePieceIndex])) {
             this.putDownPiece(activePieceIndex);
@@ -667,7 +691,7 @@ class Game extends React.Component {
             } else {
                 this.removePlayer();
             }
-        } 
+        }
     }
 }
 
