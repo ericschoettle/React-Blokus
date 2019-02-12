@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Square(props) {
+const Square = (props)=>{
     const cornerString = typeof props.squareInfo.corner !== 'number' ? '' : ' corner' + props.squareInfo.corner;
     const inactivePieceString = typeof props.squareInfo.inactivePiecePlayerIndex !== 'number' ? '' : ' setPlayer' + props.squareInfo.inactivePiecePlayerIndex;
     const activePieceString = typeof props.squareInfo.activePiecePlayerIndex !== 'number' ? '' : ' activePlayer' + props.squareInfo.activePiecePlayerIndex;

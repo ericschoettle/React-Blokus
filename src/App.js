@@ -327,51 +327,55 @@ class Game extends React.Component {
       piece.cells.forEach(cell => {
         const xCoord = piece.centerX + cell[0];
         const yCoord = piece.centerY + cell[1];
-        // todo: use case/break syntax
-        if (action === 'drawInactive') { // draw fixed piece                    
-          let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-          cells = update(cells, {
-            [oldCell.index]: {
-              $merge: {
-                inactivePiecePlayerIndex: piece.playerIndex,
-                inactivePieceIndex: piece.pieceIndex,
+        switch (action) {
+          case 'drawInactive':
+            let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+            cells = update(cells, {
+              [oldCell.index]: {
+                $merge: {
+                  inactivePiecePlayerIndex: piece.playerIndex,
+                  inactivePieceIndex: piece.pieceIndex,
+                }
               }
-            }
-          });
-        } else if (action === 'eraseInactive') {
-          let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-          cells = update(cells, {
-            [oldCell.index]: {
-              $merge: {
-                inactivePiecePlayerIndex: null,
-                inactivePieceIndex: null,
+            });
+            break;
+          case 'eraseInactive':
+            let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+            cells = update(cells, {
+              [oldCell.index]: {
+                $merge: {
+                  inactivePiecePlayerIndex: null,
+                  inactivePieceIndex: null,
+                }
               }
-            }
-          });
-        } else if (action === 'drawActive') { // draw temp piece
-          let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-          cells = update(cells, {
-            [oldCell.index]: {
-              $merge: {
-                activePiecePlayerIndex: piece.playerIndex,
-                activePieceIndex: piece.pieceIndex,
-                valid: piece.valid,
+            });
+            break;
+          case 'drawActive':
+            let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+            cells = update(cells, {
+              [oldCell.index]: {
+                $merge: {
+                  activePiecePlayerIndex: piece.playerIndex,
+                  activePieceIndex: piece.pieceIndex,
+                  valid: piece.valid,
+                }
               }
-            }
-          });
-        } else if (action === 'eraseActive') {
-          let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-          cells = update(cells, {
-            [oldCell.index]: {
-              $merge: {
-                activePiecePlayerIndex: null,
-                activePieceIndex: null,
-                valid: null,
+            });
+            break;
+          case 'eraseActive':
+            let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+            cells = update(cells, {
+              [oldCell.index]: {
+                $merge: {
+                  activePiecePlayerIndex: null,
+                  activePieceIndex: null,
+                  valid: null,
+                }
               }
-            }
-          });
-        } else {
-          console.log(`Error in pieceToCells - invalid action '${action}'`)
+            });
+          default:
+            console.log(`Error in pieceToCells - invalid action '${action}'`)
+            break;
         }
       });
     });

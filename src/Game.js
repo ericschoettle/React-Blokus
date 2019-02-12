@@ -109,7 +109,12 @@ const pieceTemplate = [
     },
 ];
 
-const boardCorners = [{ x: 0, y: 0 }, { x: sharedBoardSize - 1, y: sharedBoardSize - 1 }, { x: 0, y: sharedBoardSize - 1 }, { x: sharedBoardSize - 1, y: 0 }];
+const boardCorners = [
+    { x: 0, y: 0 }, 
+    { x: sharedBoardSize - 1, y: sharedBoardSize - 1 }, 
+    { x: 0, y: sharedBoardSize - 1 }, 
+    { x: sharedBoardSize - 1, y: 0 }
+];
 
 class Game extends React.Component {
     constructor(props) {
@@ -176,7 +181,6 @@ class Game extends React.Component {
     }
 
     keyDownHandler(key) {
-        console.log(key);
         const keyToActionMap = {
             ArrowUp: 'moveUp',
             ArrowDown: 'moveDown',
@@ -224,61 +228,63 @@ class Game extends React.Component {
         return pieces;
     }
 
-    // takes a piece and draws it on the board, in terms of rows/columns
+    // draws or erases pieces from board
     piecesToCells(pieces, cells, action) {
         if (pieces.constructor !== Array) {
             pieces = [pieces];
         }
+
         pieces.forEach((piece) => {
             const boardIndex = piece.boardIndex;
             piece.cells.forEach(cell => {
                 const xCoord = piece.centerX + cell[0];
                 const yCoord = piece.centerY + cell[1];
-                // todo: use case/break syntax
-                if (action === 'drawInactive') { // draw fixed piece                    
-                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {
-                        [oldCell.index]: {
-                            $merge: {
-                                inactivePiecePlayerIndex: piece.playerIndex,
-                                inactivePieceIndex: piece.pieceIndex,
+                let oldCell = this.getCells(yCoord, xCoord, boardIndex);
+                switch (action) {
+                    case 'drawInactive':  // draw fixed piece    
+                        cells = update(cells, {
+                            [oldCell.index]: {
+                                $merge: {
+                                    inactivePiecePlayerIndex: piece.playerIndex,
+                                    inactivePieceIndex: piece.pieceIndex,
+                                }
                             }
-                        }
-                    });
-                } else if (action === 'eraseInactive') {
-                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {
-                        [oldCell.index]: {
-                            $merge: {
-                                inactivePiecePlayerIndex: null,
-                                inactivePieceIndex: null,
+                        });   
+                        break 
+                    case 'eraseInactive': // Erase mfixed piece
+                        cells = update(cells, {
+                            [oldCell.index]: {
+                                $merge: {
+                                    inactivePiecePlayerIndex: null,
+                                    inactivePieceIndex: null,
+                                }
                             }
-                        }
-                    });
-                } else if (action === 'drawActive') { // draw temp piece
-                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {
-                        [oldCell.index]: {
-                            $merge: {
-                                activePiecePlayerIndex: piece.playerIndex,
-                                activePieceIndex: piece.pieceIndex,
-                                valid: piece.valid,
+                        });
+                        break
+                    case 'drawActive': // draw temp piece
+                        cells = update(cells, {
+                            [oldCell.index]: {
+                                $merge: {
+                                    activePiecePlayerIndex: piece.playerIndex,
+                                    activePieceIndex: piece.pieceIndex,
+                                    valid: piece.valid,
+                                }
                             }
-                        }
-                    });
-                } else if (action === 'eraseActive') {
-                    let oldCell = this.getCells(yCoord, xCoord, boardIndex);
-                    cells = update(cells, {
-                        [oldCell.index]: {
-                            $merge: {
-                                activePiecePlayerIndex: null,
-                                activePieceIndex: null,
-                                valid: null,
+                        });
+                        break
+                    case 'eraseActive': // erase temp piece
+                        cells = update(cells, {
+                            [oldCell.index]: {
+                                $merge: {
+                                    activePiecePlayerIndex: null,
+                                    activePieceIndex: null,
+                                    valid: null,
+                                }
                             }
-                        }
-                    });
-                } else {
-                    console.log(`Error in pieceToCells - invalid action '${action}'`)
+                        });
+                        break
+                    default:
+                        console.log(`Error in pieceToCells - invalid action '${action}'`)
                 }
             });
         });
@@ -437,6 +443,9 @@ class Game extends React.Component {
     // function tests if location is valid.
     // Need to make it accept first piece in corner, and each player gets their corner. 
     validLocation(piece) {
+        if (this.testPieceOffBoard(piece)) {
+            return false
+        }
         let cornerTouch = false;
         let invalidSquare = false;
         const boardIndex = piece.boardIndex;
@@ -461,15 +470,68 @@ class Game extends React.Component {
             // test non-overlap
             if (center.inactivePiecePlayerIndex !== null) {
                 return invalidSquare = true;
-                // test if any sides touch the same piece
+            // test if any sides touch another piece from teh same player
             } else if (sides.some(side => { return side && side.inactivePiecePlayerIndex === piece.playerIndex })) {
                 return invalidSquare = true;
-                // test if piece is in corner OR at least one corner touches the same player's corner
+            // test if piece is in corner OR at least one corner touches the same player's corner
             } else if ((x === boardCorners[piece.playerIndex].x && y === boardCorners[piece.playerIndex].y) || corners.some(corner => corner && corner.inactivePiecePlayerIndex === piece.playerIndex)) {
                 cornerTouch = true;
             }
         });
         return (!invalidSquare && cornerTouch); // no invalid pieces and one corner touching
+    }
+
+    ai(playerIndex) {
+        const cells = this.state.cells;
+        const pieces = this.state.pieces
+        const playerPieces = pieces.filter(piece => piece.boardIndex === playerIndex);
+        if (playerPieces.length === 0) {
+            this.endGame();
+            return;
+        }
+
+        let validState = false;
+        // player index is 0-19, same for every player; global piece index (just called pieceIndex) is the index as stored in state, with all players pieces. 
+        let playerPieceIndex = playerPieces.length - 1
+        // Test all pieces
+        while (!validState && playerPieceIndex >= 0) {
+            let piece = {...playerPieces[playerPieceIndex], boardIndex: numberPlayers};
+            let x = 0;
+            // Test all locations
+            while (!validState && x < sharedBoardSize) {
+                let y = 0;
+                while (!validState && y < sharedBoardSize) {
+                    piece.centerX = x;
+                    piece.centerY = y;
+                    if (this.validLocation(piece)) {
+                        // pick up erased cells
+                        const erasedCells = this.piecesToCells([pieces[piece.pieceIndex]], cells, 'eraseInactive');
+                        const newPieces = update(pieces, {
+                            [piece.pieceIndex]: {
+                                $merge: {
+                                    centerX: x,
+                                    centerY: y,
+                                    valid: true,
+                                    boardIndex: 4,
+                                }
+                            }
+                        });
+                        const newCells = this.piecesToCells(piece, erasedCells, 'drawInactive');
+                        this.setState({
+                            cells: newCells,
+                            pieces: newPieces,
+                            activePieceIndex: null,
+                        });
+                        validState = piece;
+                    }
+                    y += 1;
+                }
+                x += 1;
+            }
+            playerPieceIndex -= 1;
+        }
+        this.advancePlayer();
+
     }
 
     testCellOffBoard(piece) {
@@ -575,6 +637,8 @@ class Game extends React.Component {
         let currentPlayers = this.state.currentPlayers;
         const currentPlayer = this.state.currentPlayer;
 
+        this.advancePlayer()
+
         // remove player
         const currentPlayerIndex = currentPlayers.indexOf(currentPlayer)
         currentPlayers.splice(currentPlayerIndex, 1);
@@ -582,8 +646,6 @@ class Game extends React.Component {
         this.setState({
             currentPlayers: currentPlayers,
         });
-
-        this.advancePlayer()
     }
 
     advancePlayer() {
@@ -592,13 +654,18 @@ class Game extends React.Component {
 
         let nextPlayerIndex = (currentPlayers.indexOf(currentPlayer) + 1) % currentPlayers.length;
         currentPlayer = currentPlayers[nextPlayerIndex];
-        if (!currentPlayer) {
+        if (typeof currentPlayer !== 'number') {
             this.endGame();
         }
 
         this.setState({
             currentPlayer: currentPlayer
-        })
+        }, ()=> {
+            if (currentPlayer === 1) {
+                this.ai(currentPlayer);
+            }
+        });
+
     }
 
     endGame() {
@@ -625,7 +692,7 @@ class Game extends React.Component {
         return score;
     }
 
-    pickUpPiece(pieceIndex, destinationBoardIndex) {
+    pickUpPiece(pieceIndex, destinationBoardIndex, x, y) {
         const cells = this.state.cells;
         const pieces = this.state.pieces;
         const erasedCells = this.piecesToCells([pieces[pieceIndex]], cells, 'eraseInactive');
@@ -633,8 +700,8 @@ class Game extends React.Component {
         const newPieces = update(pieces, {
             [pieceIndex]: {
                 $merge: {
-                    centerX: Math.round(sharedBoardSize / 2),
-                    centerY: Math.round(sharedBoardSize / 2),
+                    centerX: (x !== undefined) ? x : Math.round(sharedBoardSize / 2),
+                    centerY: (y !== undefined) ? y :Math.round(sharedBoardSize / 2),
                     valid: this.validLocation(pieces[pieceIndex]),
                     active: true,
                     boardIndex: destinationBoardIndex,
@@ -686,7 +753,7 @@ class Game extends React.Component {
             this.putDownPiece(activePieceIndex);
             activePieceIndex = null;
 
-            if (this.remainingPoints()) {
+            if (this.remainingPoints(currentPlayer)) {
                 this.advancePlayer();
             } else {
                 this.removePlayer();
